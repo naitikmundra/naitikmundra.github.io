@@ -21,11 +21,9 @@
         <link href="css/bootstrap-icons.css" rel="stylesheet">
 
         <link href="css/templatemo-topic-listing.css" rel="stylesheet">
-        <!-- Firebase App (the core Firebase SDK) is always required and must be listed first -->
-<script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-app.js"></script>
-
-<!-- Add Firebase products that you want to use -->
-<script src="https://www.gstatic.com/firebasejs/9.6.7/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+  
 <!--
 
 TemplateMo 590 topic listing
@@ -36,10 +34,8 @@ https://templatemo.com/tm-590-topic-listing
     </head>
     
     <body class="topics-listing-page" id="top">
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.7/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.7/firebase-auth.js";
-
+  <script >
+  
   const firebaseConfig = {
     apiKey: "AIzaSyCFTKXPZ0CwQ1CnC4rHGibxz8kUxS9PW28",
     authDomain: "cyber-alley.firebaseapp.com",
