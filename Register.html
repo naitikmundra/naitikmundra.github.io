@@ -36,6 +36,59 @@ https://templatemo.com/tm-590-topic-listing
     </head>
     
     <body class="topics-listing-page" id="top">
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.7/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.6.7/firebase-auth.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCFTKXPZ0CwQ1CnC4rHGibxz8kUxS9PW28",
+    authDomain: "cyber-alley.firebaseapp.com",
+    projectId: "cyber-alley",
+    storageBucket: "cyber-alley.appspot.com",
+    messagingSenderId: "323427499930",
+    appId: "1:323427499930:web:f56259d24e38969850c423"
+  };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Sign up
+    const signUpForm = document.getElementById('signup-form');
+
+    signUpForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        console.log('User signed up:', user);
+      } catch (error) {
+        console.error('Sign up error:', error.message);
+      }
+    });
+
+    // Sign in
+    const signInForm = document.getElementById('signin-form');
+
+    signInForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById('signin-email').value;
+      const password = document.getElementById('signin-password').value;
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        console.log('User signed in:', user);
+      } catch (error) {
+        console.error('Sign in error:', error.message);
+      }
+    });
+  </script>
 
         <main>
 
