@@ -46,7 +46,6 @@ https://templatemo.com/tm-590-topic-listing
   };
 
     // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
     // Sign up
@@ -67,23 +66,7 @@ https://templatemo.com/tm-590-topic-listing
       }
     });
 
-    // Sign in
-    const signInForm = document.getElementById('signin-form');
-
-    signInForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const email = document.getElementById('signin-email').value;
-      const password = document.getElementById('signin-password').value;
-
-      try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-        console.log('User signed in:', user);
-      } catch (error) {
-        console.error('Sign in error:', error.message);
-      }
-    });
+  
   </script>
 
         <main>
