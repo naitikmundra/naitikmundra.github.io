@@ -1,35 +1,5 @@
 
-firebase.initializeApp(firebaseConfig);
 
-  const firebaseConfig = {
-    apiKey: "AIzaSyCFTKXPZ0CwQ1CnC4rHGibxz8kUxS9PW28",
-    authDomain: "cyber-alley.firebaseapp.com",
-    projectId: "cyber-alley",
-    storageBucket: "cyber-alley.appspot.com",
-    messagingSenderId: "323427499930",
-    appId: "1:323427499930:web:f56259d24e38969850c423"
-  };
-const signUpForm = document.getElementById('signup-form');
-
-signUpForm.addEventListener('submit', (e) => {
-  e.preventDefault();
-  
-  const email = document.getElementById('email').value;
-  const password = document.getElementById('password').value;
-  
-  firebase.auth().createUserWithEmailAndPassword(email, password)
-    .then((userCredential) => {
-      // Signed up successfully
-      const user = userCredential.user;
-      console.log('User signed:', user);
-    })
-    .catch((error) => {
-      // Handle errors
-      const errorCode = error.code;
-      const errorMessage = error.message;
-      console.error('Sign up error:', errorMessage);
-    });
-});
 
     fetch('https://naitikmundra.github.io/navbar.html')
         .then(response => response.text())
