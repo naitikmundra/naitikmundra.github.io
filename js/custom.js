@@ -21,7 +21,7 @@ signUpForm.addEventListener('submit', (e) => {
     .then((userCredential) => {
       // Signed up successfully
       const user = userCredential.user;
-      console.log('User signed up:', user);
+      console.log('User signed:', user);
     })
     .catch((error) => {
       // Handle errors
