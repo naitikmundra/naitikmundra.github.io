@@ -47,8 +47,9 @@ https://templatemo.com/tm-590-topic-listing
     appId: "1:323427499930:web:f56259d24e38969850c423"
   };
 
-    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+
 
     // Sign up
     const signUpForm = document.getElementById('signup-form');
