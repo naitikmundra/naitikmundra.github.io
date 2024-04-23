@@ -5,7 +5,7 @@
         .then(response => response.text())
         .then(html => {
             document.getElementById('navbar-placeholder').innerHTML = html;
-            document.getElementById('navbar-placeholder').style.backgroundColor = 'cadetblue';
+            document.getElementById('navbar-placeholder').style.backgroundColor = '#252422';
         })
         .catch(error => console.error('Error fetching navbar:', error));
     console.log("got navbar");
