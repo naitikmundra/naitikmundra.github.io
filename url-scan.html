@@ -12,6 +12,46 @@
     <link href="css/templatemo-topic-listing.css" rel="stylesheet">
 </head>
 <body>
+    
+    <script>
+        // Function to fetch safety details for a domain
+        async function fetchSafetyDetails(domain) {
+            try {
+                const response = await fetch(`https://naitikmundra18.pythonanywhere.com/safetyness?domain=${domain}`);
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching safety details:', error);
+                return { error: 'Error fetching safety details' };
+            }
+        }
+
+        // Function to handle form submission
+        async function handleSubmit(event) {
+            event.preventDefault();
+            const domain = document.getElementById('domainInput').value;
+            const resultDiv = document.getElementById('result');
+
+            resultDiv.textContent = 'Loading...';
+
+            const data = await fetchSafetyDetails(domain);
+
+            if (data.error) {
+                resultDiv.textContent = data.error;
+            } else {
+                resultDiv.textContent = `Safety details for ${domain}:\n\n` +
+                    `Spamming: ${data.spamming}\n` +
+                    `Malware: ${data.malware}\n` +
+                    `Phishing: ${data.phishing}\n` +
+                    `Suspicious: ${data.suspicious}\n` +
+                    `Adult: ${data.adult}`;
+            }
+        }
+
+        // Attach event listener to form submission
+        const form = document.getElementById('domainForm');
+        form.addEventListener('submit', handleSubmit);
+    </script>
     <main>
 
         <div id="navbar-placeholder" style="
@@ -49,11 +89,11 @@
                     </div>
 
                     <div class="col-lg-6 col-12">
-                        <form  id="signup-form"  class="custom-form contact-form" role="form">
+                        <form  id="domainForm"  class="custom-form contact-form" role="form">
                             <div class="row">
                                 <div class="col-lg-6 col-md-6 col-12">
                                     <div class="form-floating">
-                                        <input type="text" name="name" id="name" class="form-control" placeholder="https://example.com/" required="">
+                                        <input type="text" name="name" id="domainInput" class="form-control" placeholder="https://example.com/" required="">
                                         
                                         <label for="floatingInput">Enter URL</label>
                                     </div>
@@ -65,6 +105,7 @@
 
                             </div>
                         </form>
+                     <div id="result"></div>
                     </div>
                 </div>
             </div>
