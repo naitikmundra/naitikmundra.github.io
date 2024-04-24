@@ -11,15 +11,15 @@ https://templatemo.com/tm-590-topic-listing
 -----------------------------------------*/
 :root {
   --white-color:                  #ffffff;
-  --primary-color:                #ffc300;
-  --secondary-color:              #ffc300;
-  --section-bg-color:             #001d3d;
-  --custom-btn-bg-color:          #001d3d;
-  --custom-btn-bg-hover-color:    #13547a;
-  --dark-color:                   #003566;
-  --p-color:                      #ffc300;
-  --border-color:                 #ffc300;
-  --link-hover-color:             #ffc300;
+  --primary-color:                #ffffff;
+  --secondary-color:              #ffffff;
+  --section-bg-color:             #000000;
+  --custom-btn-bg-color:          #ffffff;
+  --custom-btn-bg-hover-color:    #ffffff;
+  --dark-color:                   #ffffff;
+  --p-color:                      #ffffff;
+  --border-color:                 #ffffff;
+  --link-hover-color:             #ffffff;
 
   --body-font-family:             'Open Sans', sans-serif;
   --title-font-family:            'Montserrat', sans-serif;
@@ -147,7 +147,7 @@ strong {
 }
 
 .section-overlay {
-  background-image: linear-gradient(10deg, #171615 0%, #141412 100%);
+  background-image: linear-gradient(10deg, #6f4f2e 0%, #a2a24e 100%);
   position: absolute;
   top: 0;
   left: 0;
