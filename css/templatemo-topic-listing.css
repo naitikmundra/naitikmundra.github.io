@@ -11,15 +11,15 @@ https://templatemo.com/tm-590-topic-listing
 -----------------------------------------*/
 :root {
   --white-color:                  #ffffff;
-  --primary-color:                #ffffff;
-  --secondary-color:              #ffffff;
-  --section-bg-color:             #000000;
-  --custom-btn-bg-color:          #ffffff;
-  --custom-btn-bg-hover-color:    #ffffff;
-  --dark-color:                   #ffffff;
-  --p-color:                      #ffffff;
-  --border-color:                 #ffffff;
-  --link-hover-color:             #ffffff;
+  --primary-color:                #13547a;
+  --secondary-color:              #80d0c7;
+  --section-bg-color:             #f0f8ff;
+  --custom-btn-bg-color:          #80d0c7;
+  --custom-btn-bg-hover-color:    #13547a;
+  --dark-color:                   #000000;
+  --p-color:                      #717275;
+  --border-color:                 #7fffd4;
+  --link-hover-color:             #13547a;
 
   --body-font-family:             'Open Sans', sans-serif;
   --title-font-family:            'Montserrat', sans-serif;
@@ -147,7 +147,7 @@ strong {
 }
 
 .section-overlay {
-  background-image: linear-gradient(10deg, #6f4f2e 0%, #a2a24e 100%);
+  background-image: linear-gradient(15deg, #13547a 0%, #80d0c7 100%);
   position: absolute;
   top: 0;
   left: 0;
@@ -288,8 +288,8 @@ strong {
 }
 
 .navbar {
-  background: #000814;
-  border-bottom: 1px solid #ffbe0b;
+  background: transparent;
+  border-bottom: 1px solid rgba(128, 208, 199, 0.35);
   z-index: 9;
 }
 
@@ -486,7 +486,7 @@ strong {
   HERO        
 -----------------------------------------*/
 .hero-section {
-  background-color: #000814;
+  background-image: linear-gradient(15deg, #13547a 0%, #80d0c7 100%);
   position: relative;
   overflow: hidden;
   padding-top: 150px;
@@ -525,6 +525,7 @@ strong {
 -----------------------------------------*/
 .featured-section {
   background-color: var(--secondary-color);
+  border-radius: 0 0 100px 100px;
   padding-bottom: 100px;
 }
 
@@ -544,7 +545,7 @@ strong {
 }
 
 .custom-block:hover {
-  background-color: #001d3d;
+  background-color: var(--secondary-color);
   transform: translateY(-3px);
 }
 
@@ -891,7 +892,7 @@ blockquote {
 -----------------------------------------*/
 .custom-form .form-control {
   border-radius: var(--border-radius-large);
-  color: #ffbe0b;
+  color: var(--p-color);
   margin-bottom: 24px;
   padding-top: 13px;
   padding-bottom: 13px;
@@ -904,7 +905,7 @@ blockquote {
 }
 
 .custom-form button[type="submit"] {
-  background: #ffbe0b;
+  background: var(--custom-btn-bg-color);
   border: none;
   border-radius: var(--border-radius-large);
   color: var(--white-color);
@@ -917,7 +918,7 @@ blockquote {
 
 .custom-form button[type="submit"]:hover,
 .custom-form button[type="submit"]:focus {
-  background: #252422;
+  background: var(--custom-btn-bg-hover-color);
   border-color: transparent;
 }
 
@@ -926,7 +927,7 @@ blockquote {
   SITE FOOTER              
 -----------------------------------------*/
 .site-footer {
-  border-bottom: 10px solid #ffc300;
+  border-bottom: 10px solid var(--secondary-color);
   position: relative;
 }
 
@@ -1151,4 +1152,3 @@ blockquote {
     font-size: 20px;
   }
 }
-
