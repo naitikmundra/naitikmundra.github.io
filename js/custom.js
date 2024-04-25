@@ -2,6 +2,7 @@
 
 
     fetch('https://naitikmundra.github.io/navbar.html')
+    // fetch('http://127.0.0.1:5501/navbar.html')
         .then(response => response.text())
         .then(html => {
             document.getElementById('navbar-placeholder').innerHTML = html;
@@ -10,6 +11,7 @@
         .catch(error => console.error('Error fetching navbar:', error));
     console.log("got navbar");
     fetch('https://naitikmundra.github.io/footer.html')
+    // fetch('http://127.0.0.1:5501/footer.html')
         .then(response => response.text())
         .then(html => {
             document.getElementById('footer-placeholder').innerHTML = html;
