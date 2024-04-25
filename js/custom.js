@@ -9,6 +9,14 @@
         })
         .catch(error => console.error('Error fetching navbar:', error));
     console.log("got navbar");
+    fetch('https://naitikmundra.github.io/footer.html')
+        .then(response => response.text())
+        .then(html => {
+            document.getElementById('footer-placeholder').innerHTML = html;
+            // document.getElementById('navbar-placeholder').style.backgroundColor = '#252422';
+        })
+        .catch(error => console.error('Error fetching footer:', error));
+    console.log("got footer");
   (function ($) {
   
   "use strict";

@@ -1003,6 +1003,16 @@ blockquote {
   font-size: var(--copyright-font-size);
 }
 
+body::-webkit-scrollbar {
+  display: block;
+  width: 8px;
+  background: #1ea3c1;
+}
+body::-webkit-scrollbar-thumb {
+  background-color: #252422;
+
+  border-radius: 50px;
+}
 
 /*---------------------------------------
   SOCIAL ICON               
