@@ -10,7 +10,6 @@ https://templatemo.com/tm-590-topic-listing
   CUSTOM PROPERTIES ( VARIABLES )             
 -----------------------------------------*/
 :root {
-  --theme-color:                  black;
   --white-color:                  #ffffff;
   --primary-color:                #13547a;
   --secondary-color:              #80d0c7;
@@ -61,7 +60,7 @@ h3,
 h4,
 h5,
 h6 {
-  color: var(--white-color);
+  color: var(--dark-color);
 }
 
 h1,
