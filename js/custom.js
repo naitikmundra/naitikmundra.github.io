@@ -23,7 +23,12 @@ function getCookie(name) {
     }
     return null;
 }
-// Function to extract the front part of an email address
+function checkCookie(cookieName) {
+  return document.cookie.split(';').some((cookie) => cookie.trim().startsWith(`${cookieName}=`));
+}
+if (window.location.pathname !== '/index.html' && window.location.pathname !== '/login.html' && window.location.pathname !== '/register.html' && window.location.pathname !== '/url-scan.html' && window.location.pathname !== '/login.html' && !checkCookie('uname')) {
+  window.location.href = 'login.html';
+}
 function extractFrontPart(email) {
     // Split the email address at the "@" symbol
     var parts = email.split("@");
@@ -39,7 +44,20 @@ function extractFrontPart(email) {
         .then(html => {
             document.getElementById('navbar-placeholder').innerHTML = html;
             document.getElementById('navbar-placeholder').style.backgroundColor = '#252422';
-             document.getElementById("uname").textContent = getCookie("uname");
+            document.getElementById("uname").textContent = getCookie("uname");
+            if (getCookie("uname") != null) {
+              document.getElementById("logout").style.display = "block";
+              document.getElementById("login").style.display = "none";
+              document.getElementById("register").style.display = "none";
+          } else {
+              document.getElementById("login").style.display = "block";
+              document.getElementById("logout").style.display = "none";
+              document.getElementById("register").style.display = "block";
+          }
+          document.getElementById('logout').addEventListener('click', function() {
+            setCookie('uname', '', -1); // Set "uname" cookie to nil
+            location.reload(); // Reload the page after logout
+        });
         })
         .catch(error => console.error('Error fetching navbar:', error));
     console.log("got navbar");
@@ -100,7 +118,4 @@ function extractFrontPart(email) {
       var timeline = $('#vertical-scrollable-timeline li');
       Array.from(timeline).forEach(isScrollIntoView);
     });
-  
   })(window.jQuery);
-
-
