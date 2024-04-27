@@ -23,6 +23,14 @@ function getCookie(name) {
     }
     return null;
 }
+// Function to extract the front part of an email address
+function extractFrontPart(email) {
+    // Split the email address at the "@" symbol
+    var parts = email.split("@");
+    
+    // Return the front part (first element of the array)
+    return parts[0];
+}
 
 
     fetch('https://naitikmundra.github.io/navbar.html')
