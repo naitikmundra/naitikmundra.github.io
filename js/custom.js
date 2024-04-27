@@ -39,6 +39,7 @@ function extractFrontPart(email) {
         .then(html => {
             document.getElementById('navbar-placeholder').innerHTML = html;
             document.getElementById('navbar-placeholder').style.backgroundColor = '#252422';
+             document.getElementById("uname").textContent = getCookie("uname");
         })
         .catch(error => console.error('Error fetching navbar:', error));
     console.log("got navbar");
