@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cybersecurity Quiz</title>
+    <link rel="shortcut icon" href="./assets/w-logo.png" type="image/x-icon">
+     <!-- CSS FILES -->        
+     <link rel="preconnect" href="https://fonts.googleapis.com">
+        
+     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700&family=Open+Sans&display=swap" rel="stylesheet">
+                     
+     <link href="css/bootstrap.min.css" rel="stylesheet">
+
+     <link href="css/bootstrap-icons.css" rel="stylesheet">
+
+     <link href="css/templatemo-topic-listing.css" rel="stylesheet"> 
+    <style>
+        /* body {
+            font-family: "Open Sans", sans-serif;
+            background-color: linear-gradient(15deg, #13547a 0%, #80d0c7 100%);
+            background: linear-gradient(to bottom, #13547a, #80d0c7);
+            color: #333;
+            margin: 0;
+            padding: 0;
+        } */
+      #quiz-container {
+        max-width: 600px;
+        margin: 0 auto;
+      }
+      .question {
+        margin-bottom: 20px;
+      }
+      .options label {
+        display: block;
+        margin-bottom: 10px;
+      }
+      #result {
+        margin-top: 20px;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="navbar-placeholder"></div>
+    <div id="quiz-container">
+      <h1>Cybersecurity Quiz</h1>
+      <form id="quiz-form">
+        <div class="question">
+          <p>1. What is the purpose of a firewall in cybersecurity?</p>
+          <div class="options">
+            <label
+              ><input type="radio" name="q1" value="a" />a) To protect against
+              viruses</label
+            >
+            <label
+              ><input type="radio" name="q1" value="b" />b) To prevent
+              unauthorized access to or from a private network</label
+            >
+            <label
+              ><input type="radio" name="q1" value="c" />c) To secure email
+              accounts</label
+            >
+            <label
+              ><input type="radio" name="q1" value="d" />d) To protect against
+              phishing attacks</label
+            >
+          </div>
+        </div>
+        <div class="question">
+          <p>
+            2. What is the most common method for hackers to gain unauthorized
+            access to a system?
+          </p>
+          <div class="options">
+            <label
+              ><input type="radio" name="q2" value="a" />a) Social
+              engineering</label
+            >
+            <label><input type="radio" name="q2" value="b" />b) Phishing</label>
+            <label
+              ><input type="radio" name="q2" value="c" />c) SQL injection</label
+            >
+            <label
+              ><input type="radio" name="q2" value="d" />d) Distributed Denial
+              of Service (DDoS) attacks</label
+            >
+          </div>
+        </div>
+        <div class="question">
+          <p>3. What does the term "malware" refer to?</p>
+          <div class="options">
+            <label
+              ><input type="radio" name="q3" value="a" />a) Malicious
+              hardware</label
+            >
+            <label
+              ><input type="radio" name="q3" value="b" />b) Malicious
+              software</label
+            >
+            <label
+              ><input type="radio" name="q3" value="c" />c) Malicious
+              code</label
+            >
+            <label
+              ><input type="radio" name="q3" value="d" />d) Malicious
+              network</label
+            >
+          </div>
+        </div>
+        <div class="question">
+          <p>4. Which of the following is an example of a strong password?</p>
+          <div class="options">
+            <label
+              ><input type="radio" name="q4" value="a" />a) Password123</label
+            >
+            <label><input type="radio" name="q4" value="b" />b) 123456</label>
+            <label
+              ><input type="radio" name="q4" value="c" />c) P@ssw0rd!</label
+            >
+            <label><input type="radio" name="q4" value="d" />d) qwerty</label>
+          </div>
+        </div>
+        <div class="question">
+          <p>5. What is the purpose of two-factor authentication (2FA)?</p>
+          <div class="options">
+            <label
+              ><input type="radio" name="q5" value="a" />a) To make logging in
+              faster</label
+            >
+            <label
+              ><input type="radio" name="q5" value="b" />b) To add an extra
+              layer of security</label
+            >
+            <label
+              ><input type="radio" name="q5" value="c" />c) To encrypt
+              data</label
+            >
+            <label
+              ><input type="radio" name="q5" value="d" />d) To prevent phishing
+              attacks</label
+            >
+          </div>
+        </div>
+        <div class="question">
+          <p>
+            6. What is the purpose of a VPN (Virtual Private Network) in
+            cybersecurity?
+          </p>
+          <div class="options">
+            <label
+              ><input type="radio" name="q6" value="a" />a) To protect against
+              malware</label
+            >
+            <label
+              ><input type="radio" name="q6" value="b" />b) To secure internet
+              connections and protect privacy</label
+            >
+            <label
+              ><input type="radio" name="q6" value="c" />c) To prevent
+              unauthorized access to a network</label
+            >
+            <label
+              ><input type="radio" name="q6" value="d" />d) To encrypt email
+              communications</label
+            >
+          </div>
+        </div>
+        <div class="question">
+          <p>7. What is the primary goal of a phishing attack?</p>
+          <div class="options">
+            <label
+              ><input type="radio" name="q7" value="a" />a) To steal sensitive
+              information</label
+            >
+            <label
+              ><input type="radio" name="q7" value="b" />b) To infect a system
+              with malware</label
+            >
+            <label
+              ><input type="radio" name="q7" value="c" />c) To perform a DDoS
+              attack</label
+            >
+            <label
+              ><input type="radio" name="q7" value="d" />d) To encrypt files for
+              ransom</label
+            >
+          </div>
+        </div>
+        <div class="question">
+          <p>8. What is social engineering in the context of cybersecurity?</p>
+          <div class="options">
+            <label
+              ><input type="radio" name="q8" value="a" />a) Using social media
+              to hack accounts</label
+            >
+            <label
+              ><input type="radio" name="q8" value="b" />b) Manipulating
+              individuals into divulging confidential information</label
+            >
+            <label
+              ><input type="radio" name="q8" value="c" />c) Creating fake social
+              media profiles for hacking</label
+            >
+            <label
+              ><input type="radio" name="q8" value="d" />d) Building social
+              networks for cybercriminals</label
+            >
+          </div>
+        </div>
+        <div class="question">
+          <p>9. What is a common method used in social engineering attacks?</p>
+          <div class="options">
+            <label
+              ><input type="radio" name="q9" value="a" />a) Sending emails with
+              malware attachments</label
+            >
+            <label
+              ><input type="radio" name="q9" value="b" />b) Creating fake
+              websites to steal login credentials</label
+            >
+            <label
+              ><input type="radio" name="q9" value="c" />c) Impersonating a
+              trusted person or entity</label
+            >
+            <label
+              ><input type="radio" name="q9" value="d" />d) Launching DDoS
+              attacks</label
+            >
+          </div>
+        </div>
+        <div class="question">
+          <p>10. What is the purpose of encryption in cybersecurity?</p>
+          <div class="options">
+            <label
+              ><input type="radio" name="q10" value="a" />a) To hide information
+              from unauthorized users</label
+            >
+            <label
+              ><input type="radio" name="q10" value="b" />b) To speed up
+              internet connections</label
+            >
+            <label
+              ><input type="radio" name="q10" value="c" />c) To prevent phishing
+              attacks</label
+            >
+            <label
+              ><input type="radio" name="q10" value="d" />d) To create strong
+              passwords</label
+            >
+          </div>
+        </div>
+        <div class="question">
+          <p>
+            11. What is the purpose of regular software updates in
+            cybersecurity?
+          </p>
+          <div class="options">
+            <label
+              ><input type="radio" name="q11" value="a" />a) To add new
+              features</label
+            >
+            <label
+              ><input type="radio" name="q11" value="b" />b) To improve
+              performance</label
+            >
+            <label
+              ><input type="radio" name="q11" value="c" />c) To fix security
+              vulnerabilities</label
+            >
+            <label
+              ><input type="radio" name="q11" value="d" />d) To increase system
+              compatibility</label
+            >
+          </div>
+        </div>
+        <div class="question">
+          <p>12. What is the purpose of antivirus software in cybersecurity?</p>
+          <div class="options">
+            <label
+              ><input type="radio" name="q12" value="a" />a) To prevent
+              unauthorized access to a network</label
+            >
+            <label
+              ><input type="radio" name="q12" value="b" />b) To secure internet
+              connections</label
+            >
+            <label
+              ><input type="radio" name="q12" value="c" />c) To detect and
+              remove malware</label
+            >
+            <label
+              ><input type="radio" name="q12" value="d" />d) To encrypt
+              data</label
+            >
+          </div>
+        </div>
+        <div class="question">
+          <p>13. What is the purpose of a security token in cybersecurity?</p>
+          <div class="options">
+            <label
+              ><input type="radio" name="q13" value="a" />a) To secure email
+              accounts</label
+            >
+            <label
+              ><input type="radio" name="q13" value="b" />b) To add an extra
+              layer of security for authentication</label
+            >
+            <label
+              ><input type="radio" name="q13" value="c" />c) To prevent phishing
+              attacks</label
+            >
+            <label
+              ><input type="radio" name="q13" value="d" />d) To encrypt
+              data</label
+            >
+          </div>
+        </div>
+        <div class="question">
+          <p>14. What is the purpose of a security audit in cybersecurity?</p>
+          <div class="options">
+            <label
+              ><input type="radio" name="q14" value="a" />a) To test software
+              performance</label
+            >
+            <label
+              ><input type="radio" name="q14" value="b" />b) To identify and
+              mitigate security vulnerabilities</label
+            >
+            <label
+              ><input type="radio" name="q14" value="c" />c) To secure internet
+              connections</label
+            >
+            <label
+              ><input type="radio" name="q14" value="d" />d) To create strong
+              passwords</label
+            >
+          </div>
+        </div>
+        <div class="question">
+          <p>15. What should you do if you suspect a phishing attempt?</p>
+          <div class="options">
+            <label
+              ><input type="radio" name="q15" value="a" />a) Click on the link
+              to check</label
+            >
+            <label
+              ><input type="radio" name="q15" value="b" />b) Ignore it</label
+            >
+            <label
+              ><input type="radio" name="q15" value="c" />c) Report it to the
+              relevant authorities</label
+            >
+            <label
+              ><input type="radio" name="q15" value="d" />d) Share it with
+              friends</label
+            >
+          </div>
+        </div>
+
+        <button type="submit">Submit</button>
+      </form>
+      <div id="result"></div>
+    </div>
+    <div id="footer-placeholder"></div>
+    <script>
+      document
+        .getElementById("quiz-form")
+        .addEventListener("submit", function (event) {
+          event.preventDefault();
+          let score = 0;
+          const answers = [
+            "b",
+            "a",
+            "b",
+            "c",
+            "b",
+            "b",
+            "a",
+            "b",
+            "c",
+            "a",
+            "c",
+            "c",
+            "b",
+            "b",
+            "c",
+          ];
+          for (let i = 1; i <= 15; i++) {
+            const selectedAnswer = document.querySelector(
+              `input[name=q${i}]:checked`
+            );
+            if (selectedAnswer) {
+              if (selectedAnswer.value === answers[i - 1]) {
+                score++;
+              }
+            }
+          }
+          const resultElement = document.getElementById("result");
+          resultElement.textContent = `Your score: ${score}/15. `;
+          if (score >= 10) {
+            resultElement.textContent +=
+              "Well done! You have good knowledge of cybersecurity.";
+          } else {
+            resultElement.textContent +=
+              "You might need to learn more about cybersecurity.";
+          }
+          const resetButton = document.createElement("button");
+          resetButton.textContent = "Reset Quiz";
+          resetButton.addEventListener("click", function () {
+            location.reload();
+          });
+          resultElement.appendChild(resetButton);
+        });
+    </script>
+  </body>
+   <!-- JAVASCRIPT FILES -->
+   <script src="js/jquery.min.js"></script>
+   <script src="js/bootstrap.bundle.min.js"></script>
+   <script src="js/jquery.sticky.js"></script>
+   <script src="js/click-scroll.js"></script>
+   <script src="js/custom.js"></script>
+</html>
