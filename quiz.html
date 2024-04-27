@@ -366,9 +366,9 @@
           </div>
         </div>
 
-        <button type="submit">Submit</button>
+        <button type="submit" style="color:black">Submit</button>
       </form>
-      <div id="result"></div>
+      <div id="result" style="color:black"></div>
     </div>
     <div id="footer-placeholder"></div>
     <script>
@@ -414,6 +414,7 @@
               "You might need to learn more about cybersecurity.";
           }
           const resetButton = document.createElement("button");
+          resetButton.style.color = "black";
           resetButton.textContent = "Reset Quiz";
           resetButton.addEventListener("click", function () {
             location.reload();
