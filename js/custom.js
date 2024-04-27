@@ -26,7 +26,7 @@ function getCookie(name) {
 function checkCookie(cookieName) {
   return document.cookie.split(';').some((cookie) => cookie.trim().startsWith(`${cookieName}=`));
 }
-if (window.location.pathname !== '/index.html' && window.location.pathname !== '/login.html' && window.location.pathname !== '/register.html' && window.location.pathname !== '/url-scan.html' && window.location.pathname !== '/login.html' && !checkCookie('uname')) {
+if (window.location.pathname !== '/index.html' && window.location.pathname !== '/' && window.location.pathname !== '/login.html' && window.location.pathname !== '/register.html' && window.location.pathname !== '/url-scan.html' && window.location.pathname !== '/login.html' && !checkCookie('uname')) {
   window.location.href = 'login.html';
 }
 function extractFrontPart(email) {
