@@ -68,6 +68,8 @@ https://templatemo.com/tm-590-topic-listing
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         console.log('User signed-in:', user);
+        setCookie("uname", extractFrontPart(email), 365);
+
         window.location.href = "index.html";
       } catch (error) {
         alert('Sign in error: Invalid Credentials');
