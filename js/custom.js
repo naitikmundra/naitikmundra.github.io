@@ -39,7 +39,7 @@ function extractFrontPart(email) {
 
 
     // fetch('https://naitikmundra.github.io/navbar.html')
-    fetch('http://127.0.0.1:5501/navbar.html')
+    fetch('http://naitikmundra.github.io/navbar.html')
         .then(response => response.text())
         .then(html => {
             document.getElementById('navbar-placeholder').innerHTML = html;
@@ -64,7 +64,7 @@ function extractFrontPart(email) {
         .catch(error => console.error('Error fetching navbar:', error));
     console.log("got navbar");
     // fetch('https://naitikmundra.github.io/footer.html')
-    fetch('http://127.0.0.1:5501/footer.html')
+    fetch('http://naitikmundra.github.io/footer.html')
         .then(response => response.text())
         .then(html => {
             document.getElementById('footer-placeholder').innerHTML = html;
