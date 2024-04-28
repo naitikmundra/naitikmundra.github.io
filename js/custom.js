@@ -38,8 +38,8 @@ function extractFrontPart(email) {
 }
 
 
-    fetch('https://naitikmundra.github.io/navbar.html')
-    // fetch('http://127.0.0.1:5501/navbar.html')
+    // fetch('https://naitikmundra.github.io/navbar.html')
+    fetch('http://127.0.0.1:5501/navbar.html')
         .then(response => response.text())
         .then(html => {
             document.getElementById('navbar-placeholder').innerHTML = html;
@@ -48,9 +48,11 @@ function extractFrontPart(email) {
             if (getCookie("uname") != null) {
               document.getElementById("logout").style.display = "block";
               document.getElementById("login").style.display = "none";
+              document.getElementById("quiz").style.display = "block";
               document.getElementById("register").style.display = "none";
           } else {
               document.getElementById("login").style.display = "block";
+              document.getElementById("quiz").style.display = "none";
               document.getElementById("logout").style.display = "none";
               document.getElementById("register").style.display = "block";
           }
@@ -61,8 +63,8 @@ function extractFrontPart(email) {
         })
         .catch(error => console.error('Error fetching navbar:', error));
     console.log("got navbar");
-    fetch('https://naitikmundra.github.io/footer.html')
-    // fetch('http://127.0.0.1:5501/footer.html')
+    // fetch('https://naitikmundra.github.io/footer.html')
+    fetch('http://127.0.0.1:5501/footer.html')
         .then(response => response.text())
         .then(html => {
             document.getElementById('footer-placeholder').innerHTML = html;

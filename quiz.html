@@ -28,6 +28,8 @@
         } */
       body{
         color:black ;
+
+        background-color: #232d2d;
       }
       #quiz-container {
         max-width: 600px;
@@ -45,14 +47,33 @@
         font-weight: bold;
       }
       label{
-        color:black;
+        color:rgb(214, 124, 6);
       }
+      p{
+        color: rgb(224, 213, 171);
+      }
+      button{
+        background-color: rgb(214, 124, 6);
+        border: none;
+        color: black;
+        padding: 10px 20px;
+        text-align: center;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 16px;
+        margin: 4px 2px;
+        cursor: pointer;
+        border-radius: 12px;
+      }
+      button:hover {
+        background-color: #91b7df;
+    }
     </style>
   </head>
   <body>
     <div id="navbar-placeholder"></div>
     <div id="quiz-container">
-      <h1>Cybersecurity Quiz</h1>
+      <h1 style="margin-bottom: 10vh; margin-top: 10vh; font-weight: 600; text-transform: uppercase; margin-left: 12vw;">Quiz</h1>
       <form id="quiz-form">
         <div class="question">
           <p>1. What is the purpose of a firewall in cybersecurity?</p>
@@ -366,9 +387,11 @@
           </div>
         </div>
 
-        <button type="submit" style="color:black">Submit</button>
+        <button type="submit" class="submit" style="color:black">Submit</button>
       </form>
-      <div id="result" style="color:black"></div>
+      <div style="margin-bottom: 10vh; border-radius: 10px; width: 40vw; height: 20vh;">
+        <div id="result" style="color:rgb(204, 141, 15); font-size: x-large; display: flex; flex-direction: column;"></div>
+      </div>
     </div>
     <div id="footer-placeholder"></div>
     <script>
@@ -409,6 +432,10 @@
           if (score >= 10) {
             resultElement.textContent +=
               "Well done! You have good knowledge of cybersecurity.";
+              resultElement.innerHTML += " <button id='claim-certificate'>Claim Your Certificate</button>";
+        document.getElementById('claim-certificate').addEventListener('click', function() {
+          window.open('https://forms.gle/oPMgDMUk3KnFAscj9', '_blank');
+        });
           } else {
             resultElement.textContent +=
               "You might need to learn more about cybersecurity.";
@@ -420,6 +447,10 @@
             location.reload();
           });
           resultElement.appendChild(resetButton);
+          document.querySelectorAll('.question').forEach(question => {
+            question.style.display = 'none';
+        });
+        document.querySelector('.submit').style.display = 'none';
         });
     </script>
   </body>
