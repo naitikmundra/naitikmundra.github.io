@@ -431,7 +431,7 @@ strong {
 }
 
 .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon {
-  background: transparent;
+  /* background: transparent; */
 }
 
 .navbar-toggler[aria-expanded="true"] .navbar-toggler-icon:before,
