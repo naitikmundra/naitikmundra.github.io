@@ -50,7 +50,7 @@
 
                             </div>
                         </form>
-                     <div id="result" style="color:#142f40; margin-top: 30px; margin-left: 8vw; max-width: max-content; background-color: #fccc09; border-radius: 10px;">
+                     <div id="result" style="color:#142f40; margin-top: 30px; margin-left: 8vw; max-width: max-content; background-color: #654304; border-radius: 10px;">
                     <h1></h1>
                     <h1></h1>
                     <h1></h1>
@@ -90,11 +90,7 @@
                 resultDiv.textContent = data.error;
             } else {
                 resultDiv.textContent = `Safety details for ${domain}:\n\n` +
-                    `Spamming: ${data.spamming}\n` +
-                    `Malware: ${data.malware}\n` +
-                    `Phishing: ${data.phishing}\n` +
-                    `Suspicious: ${data.suspicious}\n` +
-                    `Adult: ${data.adult}`;
+                    `Suspicious: ${data.suspicious}\n`;
             }
         }
 
