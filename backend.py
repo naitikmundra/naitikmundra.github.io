@@ -1,4 +1,4 @@
-''This backend is hosted at naitikmundra18.pythonanywhere.com for api calls''' 
+''This backend is hosted at naitikmundra18.pythonanywhere.com for api calls and not required in local replication.''' 
 
 import json
 import requests
