@@ -1,0 +1,128 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FAQ Section</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #e0f7fa, #111143);
+            color: #374151;
+        }
+
+        .header {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0.2)), url('background-image.jpg') center/cover no-repeat;
+            color: white;
+            text-align: center;
+            padding: 120px 20px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .header p {
+            font-size: 1.3rem;
+            font-weight: 300;
+            max-width: 600px;
+            line-height: 1.7;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+        }
+
+        .faq-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            padding: 60px 20px;
+            flex-wrap: wrap;
+        }
+
+        .faq-box {
+            background: linear-gradient(135deg, #ffffff, #f0f0f0);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+            width: 400px;
+            transition: transform 0.3s ease;
+        }
+
+        .faq-box:hover {
+            transform: scale(1.02);
+        }
+
+        .faq-box h3 {
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .faq-box p {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: #555;
+        }
+
+        @media (max-width: 768px) {
+            .faq-container {
+                flex-direction: column;
+                align-items: center;
+                padding: 40px 20px;
+            }
+
+            .faq-box {
+                width: 90%;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+    <div class="header">
+        <a href="homepage.html" style="position: absolute; top: 10px; left: 25px; color: black    ; padding: 10px 15px; text-decoration: none; border-radius: 5px;"><i class="fa-solid fa-2x fa-house"></i></a>
+        <h1>FAQ</h1>
+        <p>Frequently asked questions.</p>
+    </div>
+    <div class="faq-container">
+        <div class="faq-box">
+            <h3>What is the call to API and how much will I pay if the text is short?</h3>
+            <p>One call to API equals one API request, regardless of the text length, which must be between 5 and 1000 characters.</p>
+        </div>
+        <div class="faq-box">
+            <h3>What types of text can your tool analyze?</h3>
+            <p>Our tool can analyze a wide range of text, including social media posts, product reviews, customer feedback, news articles, and any other text-based data.</p>
+        </div>
+        <div class="faq-box">
+            <h3>How accurate is your sentiment analysis?</h3>
+            <p>Our models are trained on large datasets and achieve high accuracy. However, factors like sarcasm, irony, and slang can sometimes affect results. We continually improve our algorithms.</p>
+        </div>
+        <div class="faq-box">
+            <h3>How are sentiment scores calculated?</h3>
+            <p>Sentiment scores are generated using algorithms that analyze the text and assign a numerical value indicating the level of positive, negative, or neutral sentiment.</p>
+        </div>
+        <div class="faq-box">
+            <h3>What are the common use cases for sentiment analysis?</h3>
+            <p> Common use cases include brand monitoring, customer feedback analysis, market research, social media monitoring, and understanding public opinion on various topics.</p>
+        </div>
+        <div class="faq-box">
+            <h3>Can I analyze large volumes of text data?</h3>
+            <p>Yes, our platform is built to handle large datasets. We offer scalable solutions to accommodate your needs, whether you're analyzing a few reviews or millions of social media posts.</p>
+        </div>
+        <div class="faq-box">
+            <h3>How can I interpret the sentiment analysis results for my specific use case?</h3>
+            <p> We provide clear and concise reports with visualizations to help you understand the sentiment trends in your data. We also offer guidance on how to apply these insights to your specific business goals.</p>
+        </div>
+    </div>
+</body>
+</html>

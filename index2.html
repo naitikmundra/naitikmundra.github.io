@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sentiment Analysis</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f8f9fa;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Navbar */
+    nav {
+      background-color: #343a40;
+      color: white;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    nav h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+
+    nav a {
+      color: #61dafb;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    /* Main container */
+    .container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      max-width: 400px;
+      padding: 0.75rem;
+      font-size: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    button {
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    .result {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      border-radius: 8px;
+      background-color: #ffffff;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      max-width: 500px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .result h3 {
+      margin-top: 0;
+      color: #343a40;
+    }
+
+    .positive { color: #28a745; }
+    .negative { color: #dc3545; }
+    .neutral  { color: #6c757d; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <h1>Sentiment Analysis</h1>
+    <a href="pricing.html">Pricing</a>
+  </nav>
+
+  <div class="container">
+    <input type="text" id="userInput" placeholder="Type your sentence here..." />
+    <button onclick="analyzeSentiment()">Submit</button>
+
+    <div id="result" class="result" style="display: none;"></div>
+  </div>
+
+  <script>
+    async function analyzeSentiment() {
+      const text = document.getElementById('userInput').value.trim();
+      const resultDiv = document.getElementById('result');
+
+      if (!text) {
+        resultDiv.innerHTML = "<p>Please enter some text.</p>";
+        resultDiv.style.display = 'block';
+        return;
+      }
+
+      try {
+        const res = await fetch('https://sentim-api.herokuapp.com/api/v1/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({ text })
+        });
+
+        const data = await res.json();
+        const sentiment = data.result.type;
+        const confidence = data.result.polarity;
+
+        let colorClass = sentiment;
+        let capitalized = sentiment.charAt(0).toUpperCase() + sentiment.slice(1);
+
+        resultDiv.innerHTML = `
+          <h3 class="${colorClass}">${capitalized}</h3>
+          <p>Confidence Score: <strong>${confidence.toFixed(2)}</strong></p>
+          <p>"${text}"</p>
+        `;
+        resultDiv.style.display = 'block';
+      } catch (err) {
+        resultDiv.innerHTML = `<p>Something went wrong. Try again later.</p>`;
+        resultDiv.style.display = 'block';
+        console.error(err);
+      }
+    }
+  </script>
+
+</body>
+</html>
