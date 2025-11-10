@@ -458,7 +458,7 @@
 			
             <p>Different kinds of memory is the subtle detail here, we discussed them above, all 3, lets talk about the first one now that will clear it all.</p>            
             
-            <h2>MMIO</h2>
+            <h2>MMIO (Memory-Mapped I/O)</h2>
             
             <p>As you know that data in memory can be located with something called address, looks like <code>0xFEDC0000</code>. In your normal coding journey you must just have used dram to read/write data, thats where variables are stored. But there is another kind of memory its called mmio space.</p>
 			
@@ -471,7 +471,7 @@
 			<p>Yes your system has different addresses reserved for different hardware! Now the memory controller routes it to memory bus which is like a metro fricking system on the motherboard. It takes it to the vga registers and drops it there. Later VGA does what we asked it to do, display the A.</p>
 			
             <div class="note-box">
-                <p>Each hardware device has its own registers which it uses to recieve input data from cpu and provide outputs.</p>
+                <p>Each hardware device has its own registers which it uses to receive input data from cpu and provide outputs.</p>
             </div>
             
             <p>Overall MMIO is the way your kernel talks to the hardware devices, there is no direct shit like hey <code>networkcard.status=ON</code> We just write to memory addresses of mmio space, to make stuff happen.</p>
@@ -502,7 +502,7 @@
 			<p>This whole proccess may seem overwhelming let me simplify, see Kernel once booting code ends isn't a series of code like level1 --> level2 --> level3 BUT its just a bunch of functions packed together to do stuff, these can be called in any order. See CPU is let known what these function do through IDT as I said, and you will see how kernel is all just about:</p>
 			
 			<p><strong>1. Scheduling Processes:</strong> that's about executing user ran applications, maybe ms word, chrome anything. Scheduler functions are all about giving to CPU what user wants to execute and deciding order and data flow.</p>
-			<p><strong>2. Input Handling:</strong> that's about handling data returned from everything as user process ran, that data that vga has displayed chrome on screen and the data that network packet has got back with your google acc details it doesn't happen in a flow but a bunch of functions running and recieving data. Our job will be to bridge this recieved data so his acc data is also displayed as soon as chrome covers the screen.</p>	
+			<p><strong>2. Input Handling:</strong> that's about handling data returned from everything as user process ran, that data that vga has displayed chrome on screen and the data that network packet has got back with your google acc details it doesn't happen in a flow but a bunch of functions running and recieving data. Our job will be to bridge this received data so his acc data is also displayed as soon as chrome covers the screen.</p>	
 
 
 
