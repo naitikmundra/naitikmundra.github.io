@@ -495,24 +495,28 @@
 			
 			<h3>Confused Aren't ya?</h3>
 			
+			<p>Ok I think we have left him naked enough, lets just let kernel put the undergarments back </p>
+			
 			<p>This whole proccess me seem overwhelming let me simplify, see Kernel once booting code ends isn't a series of code like level1 --> level2 --> level3 BUT its just a bunch of functions packed together to do stuff, these can be called in any order. See CPU is let known what these function do through IDT as I said, and you will see how kernel is all just about:</p>
 			
 			<p><strong>1. Scheduling Processes:</strong> that's about executing user ran applications, maybe ms word, chrome anything. Scheduler functions are all about giving to CPU what user wants to execute and deciding order and data flow.</p>
 			<p><strong>2. Input Handling:</strong> that's about handling data returned from everything as user process ran, that data that vga has displayed chrome on screen and the data that network packet has got back with your google acc details it doesn't happen in a flow but a bunch of functions running and recieving data. Our job will be to bridge this recieved data so his acc data is also displayed as soon as chrome covers the screen.</p>	
 
-			<p>This I did just remove the upper clothing of kernel, we removed his underware when we talked about the 3 read and writes.</p>
+
 
 			
 			
 			<p>I use kernel and OS interchangabely but they do carry different meaning, OS is a broader term and kernel is a part of it and is the base layer of any OS, operating at ring 0 with full access. Layers in OS are just classification based on access, and Kernel is the base layer, tbh consider kernel as an entire OS for now we dont need to go in detail, this is too much unnecessary theory tbh, you can google it.</p>               
             
+
+			
             <div class="about">
             
             <p>"All a Kernel or essentially the entire OS is, is code and this code contains instructions to read and write to memory and nothing else, linux, windows, mac os, you name it, what it writes and read from the memory is the magic and how its executed by the cpu is the awe."</p>
             </div>
             <h2>What's Next?</h2>
             
-            <p>In Part 2, I will answer some important stuff about how C and assembly will be used during development of Our OS. How C and assembly will be combinedly used, and insights over special kind of C we will be using.</p>
+            <p>In Part 2, CPU registers will be discussed, I will answer some important stuff about how C and assembly will be used during development of Our OS. How C and assembly will be combinedly used, and insights over special kind of C we will be using.</p>
             
 
         
