@@ -448,7 +448,7 @@
 			
 			<p>And these 3 things are just memory hardware meant to hold data and nothing else, dont worry I will be explaining them</p>
 			
-			<p><strong>Well that's it, that's all we are going to code,</strong> these 3 tasks, all other code will be just about preparing data to write and interpretting data that was read. It is no rocket science, at core tbh writing OS is just data managment in an optimized way. Memory managment, process scheduling, and every other core kernel functions lie within umbrealla of these 3 kinds of read and writes.</p>
+			<p><strong>Well that's it, that's all we are going to code,</strong> these 3 tasks, all other code will be just about preparing data to write and interpreting data that was read. It is no rocket science, at core tbh writing OS is just data managment in an optimized way. Memory managment, process scheduling, and every other core kernel functions lie within umbrella of these 3 kinds of read and writes.</p>
         
             <h3>But hey Naitik what? How do things happen then?</h3>
             
@@ -483,9 +483,9 @@
 			<p>For inputs an interesting process happens, let’s talk about the keyboard. The CPU first receives if any key is pressed we call this i/o. When the cpu receives it what it does is it goes to part of kernel (a function) which handles inputs, we call it handler, and it generally obviously takes the input data as argument, so cpu interrupts everything else and run this handler code block, later it depends on us how we write our handler and how we use the received key data.</p>
 			
 			<h3>Wait, but how does CPU know which function to run when?</h3>
-			<p>There is something called <strong>IDT (Interrupt Descriptor Table)</strong>, as the name suggests it contains data for CPU, of which function to run on which devices interrupt, since kernel as code lies on ram, functions also lie on ram and have their own pointers. The IDT contains pointer to the functions. Actually we create IDT ourselves in later stages of booting when we are ready to handle inputs, IDT lies on dram as we store it and let CPU know its location by writing to a special register <code>IDTR</code>, with memory address or a pointer to the IDT table, and CPU reads from it as it gets interrupts.</p>
+			<p>There is something called <strong>IDT (Interrupt Descriptor Table)</strong>, as the name suggests it contains data for CPU, of which function to run on which devices interrupt, since kernel as code lies on ram, functions also lie on ram and have their own pointers. The IDT contains pointer to the functions. Actually we create IDT ourselves in later stages of booting when we are ready to handle inputs, IDT lies on dram as we store it and let CPU know its location by writing to a special register <code>IDTR</code>, with memory address or a pointer to the IDT table.</p>
             <div class="note-box">
-                <p>There is something called an interrupt controller, it gathers all of the interrupts and knows which interrupt came from which device and lets CPU know so it can fetch the required handler function pointer address.</p>
+                <p>There is something called an interrupt controller, it gets the interrupts and knows which interrupt came from which device, and lets CPU know so it can fetch the required handler function pointer address.</p>
             </div>			
 			
 			<p>This is what happens for everything: a network card packet, interrupt! A file on usb pendrive interrupt and let the kernel know. And CPU mind you is very fast, it handles all interrupts from every fucking device so fast you dont even feel a delay when you press key and its typed while simultaneously the network card was sending packets for a youtube video playing in background.</p>
@@ -497,7 +497,7 @@
 			
 			<p>Ok I think we have left him naked enough, lets just let kernel put the undergarments back </p>
 			
-			<p>This whole proccess me seem overwhelming let me simplify, see Kernel once booting code ends isn't a series of code like level1 --> level2 --> level3 BUT its just a bunch of functions packed together to do stuff, these can be called in any order. See CPU is let known what these function do through IDT as I said, and you will see how kernel is all just about:</p>
+			<p>This whole proccess may seem overwhelming let me simplify, see Kernel once booting code ends isn't a series of code like level1 --> level2 --> level3 BUT its just a bunch of functions packed together to do stuff, these can be called in any order. See CPU is let known what these function do through IDT as I said, and you will see how kernel is all just about:</p>
 			
 			<p><strong>1. Scheduling Processes:</strong> that's about executing user ran applications, maybe ms word, chrome anything. Scheduler functions are all about giving to CPU what user wants to execute and deciding order and data flow.</p>
 			<p><strong>2. Input Handling:</strong> that's about handling data returned from everything as user process ran, that data that vga has displayed chrome on screen and the data that network packet has got back with your google acc details it doesn't happen in a flow but a bunch of functions running and recieving data. Our job will be to bridge this recieved data so his acc data is also displayed as soon as chrome covers the screen.</p>	
