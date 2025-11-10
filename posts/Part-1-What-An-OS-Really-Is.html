@@ -485,13 +485,15 @@
 			<h3>Wait, but how does CPU know which function to run when?</h3>
 			<p>There is something called <strong>IDT (Interrupt Descriptor Table)</strong>, as the name suggests it contains data for CPU, of which function to run on which devices interrupt, since kernel as code lies on ram, functions also lie on ram and have their own pointers. The IDT contains pointer to the functions. Actually we create IDT ourselves in later stages of booting when we are ready to handle inputs, IDT lies on dram as we store it and let CPU know its location by writing to a special register <code>IDTR</code>, with memory address or a pointer to the IDT table.</p>
             <div class="note-box">
-                <p>There is something called an interrupt controller, it gets the interrupts and knows which interrupt came from which device, and lets CPU know so it can fetch the required handler function pointer address.</p>
+                <p>There is something called an interrupt controller, it gets the interrupts and knows which interrupt came from which device, and lets CPU know  with an interrupt vector number, since that’s what the CPU uses to index into the IDT. So it can fetch the required handler function pointer address.</p>
             </div>			
 			
 			<p>This is what happens for everything: a network card packet, interrupt! A file on usb pendrive interrupt and let the kernel know. And CPU mind you is very fast, it handles all interrupts from every fucking device so fast you dont even feel a delay when you press key and its typed while simultaneously the network card was sending packets for a youtube video playing in background.</p>
 
 			
 			<p><strong>DMA or Direct Memory Access:</strong> Now one hardware can interrupt CPU and say that I have brought some data back, but giving entire data to CPU or asking CPU to read it from its register, which on itself cant hold a good amount, and then ask CPU write it to ram, as you may infer that would flood CPU with so much DATA and overhead! Instead hardware devices are given direct access to memory addresses on dram where they can directly leave data and just make an interrupt, cpu checks the output register of device through mmio, and gets pointer to the dram address where returned data was written, then run the kernel handler with the data.</p>
+			
+			<p>Basically CPU isn’t flooded with copying large buffers — DMA lets devices place data directly into RAM and simply notify the CPU once done.</p>
 			
 			<h3>Confused Aren't ya?</h3>
 			
