@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    	<link rel="icon" href="../images/logo.png" type="image/png">
+
+	<link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+
+	<!-- Prism.js core -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/prism.min.js"></script>
+
+	<!-- Optional: add language support -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/components/prism-javascript.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/components/prism-nasm.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/components/prism-c.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.30.0/components/prism-bash.min.js"></script>
+
+    <title>UEFI 64-BIT out of thin air</title>
+    
+    
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+    
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: 'IBM Plex Sans', sans-serif;
+        background: #e8dcc4;
+        color: #2a2520;
+        line-height: 1.8;
+        min-height: 100vh;
+        font-size: 1.1em; /* increased overall font size */
+    }
+    
+    .paper-texture {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: 
+            repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.02) 2px, rgba(0,0,0,.02) 3px),
+            repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,.01) 2px, rgba(0,0,0,.01) 3px);
+        pointer-events: none;
+        z-index: 1;
+    }
+    
+    nav {
+        background: #2a2520;
+        border-bottom: 4px solid #1a1510;
+        padding: 20px;
+        position: relative;
+        z-index: 100;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    .back-home-floating {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        background: #2a2520;
+        color: #f5ede0;
+        padding: 10px 18px;
+        text-decoration: none;
+        font-family: 'IBM Plex Mono', monospace;
+        font-weight: 500;
+        font-size: 0.95em; /* slightly larger */
+        border: 3px solid #2a2520;
+        box-shadow: 3px 3px 0 rgba(42, 37, 32, 0.4);
+        opacity: 0;
+        transform: translateX(-20px);
+        transition: all 0.3s ease;
+        pointer-events: none;
+        z-index: 1000;
+    }
+    
+    .back-home-floating.visible {
+        opacity: 1;
+        transform: translateX(0);
+        pointer-events: all;
+    }
+    
+    .back-home-floating:hover {
+        transform: translate(-2px, -2px);
+        box-shadow: 5px 5px 0 rgba(42, 37, 32, 0.4);
+    }
+    
+    nav .nav-content {
+        max-width: 950px; /* slightly wider */
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    nav a {
+        color: #e8dcc4;
+        text-decoration: none;
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 0.95em; /* slightly larger */
+        transition: opacity 0.2s;
+    }
+    
+    nav a:hover {
+        opacity: 0.6;
+    }
+    
+    .nav-home {
+        font-weight: 500;
+        font-size: 1.2em; /* slightly larger */
+    }
+    
+    .nav-links {
+        display: flex;
+        gap: 28px; /* slightly larger gap */
+    }
+    
+    article {
+        max-width: 1250px; /* increased content width */
+        margin: 40px auto;
+        padding: 0 60px; /* increased padding */
+        position: relative;
+        z-index: 2;
+    }
+    
+    .document {
+        background: #f5ede0;
+        border: 3px solid #2a2520;
+        box-shadow: 
+            6px 6px 0 rgba(42, 37, 32, 0.3),
+            inset 0 0 0 1px rgba(255,255,255,0.3);
+        padding: 70px 90px; /* increased padding */
+        margin-bottom: 30px;
+    }
+    
+    .part-label {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 1em; /* slightly larger */
+        color: #8b3a3a;
+        font-weight: 500;
+        letter-spacing: 2px;
+        margin-bottom: 10px;
+        text-transform: uppercase;
+    }
+    
+    h1 {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 2.8em; /* increased */
+        font-weight: 600;
+        margin-bottom: 20px;
+        letter-spacing: -1px;
+        border-bottom: 3px solid #2a2520;
+        padding-bottom: 15px;
+        line-height: 1.2;
+    }
+    
+    .meta {
+        display: flex;
+        gap: 20px;
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 0.9em; /* slightly larger */
+        color: #5a5550;
+        margin-bottom: 40px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #d0c4b0;
+    }
+    
+    .meta span {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    h2 {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 2em; /* increased */
+        font-weight: 500;
+        margin: 40px 0 20px 0;
+        color: #2a2520;
+        border-left: 4px solid #2a2520;
+        padding-left: 15px;
+    }
+    
+    h3 {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 1.4em; /* increased */
+        font-weight: 500;
+        margin: 30px 0 15px 0;
+        color: #3a3530;
+    }
+    
+    p {
+        margin-bottom: 20px;
+        font-size: 1.15em; /* increased */
+    }
+    
+    .intro-box {
+        background: #ebe3d5;
+        border-left: 4px solid #8b3a3a;
+        padding: 25px;
+        margin: 30px 0;
+        font-size: 1.2em; /* increased */
+    }
+    
+    .note-box {
+        background: #e8dcc4;
+        border: 2px solid #2a2520;
+        padding: 20px;
+        margin: 25px 0;
+        position: relative;
+    }
+    
+    .note-box::before {
+        content: "NOTE";
+        position: absolute;
+        top: -12px;
+        left: 15px;
+        background: #2a2520;
+        color: #f5ede0;
+        padding: 2px 12px;
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 0.8em; /* slightly larger */
+        font-weight: 500;
+        letter-spacing: 1px;
+    }
+    
+    .image-container {
+        margin: 35px 0;
+        border: 3px solid #2a2520;
+        background: #fff;
+        padding: 15px;
+        box-shadow: 4px 4px 0 rgba(42, 37, 32, 0.2);
+    }
+    
+    .image-container img {
+        width: 100%;
+        display: block;
+        border: 1px solid #d0c4b0;
+    }
+    
+    .image-caption {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 0.9em; /* slightly larger */
+        color: #5a5550;
+        margin-top: 10px;
+        text-align: center;
+    }
+    
+    code {
+        font-family: 'IBM Plex Mono', monospace;
+        background: #e8dcc4;
+        padding: 3px 8px;
+        border: 1px solid #d0c4b0;
+        font-size: 1em; /* slightly larger */
+        border-radius: 2px;
+    }
+    
+	pre[class*="language-"] {
+		background: #2a2520; /* dark background matches your theme */
+		color: #f5ede0;      /* default text color */
+		border: 3px solid #1a1510;
+		padding: 25px;
+		overflow-x: auto;
+		margin: 25px 0;
+		font-family: 'IBM Plex Mono', monospace;
+		font-size: 1em;
+		line-height: 1.6;
+		box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+		border-radius: 4px;
+	}
+
+	/* Ensure inline code inside <pre> is styled correctly */
+	pre code[class*="language-"] {
+		background: none;
+		color: inherit;
+		padding: 0;
+		border: none;
+	}
+    
+    ul, ol {
+        margin: 20px 0 20px 30px;
+    }
+    
+    li {
+        margin-bottom: 12px;
+        font-size: 1.15em; /* slightly larger */
+    }
+    
+    .navigation {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 50px;
+        padding-top: 30px;
+        border-top: 2px solid #d0c4b0;
+    }
+    
+    .nav-button {
+        display: inline-block;
+        background: #2a2520;
+        color: #f5ede0;
+        padding: 15px 30px;
+        text-decoration: none;
+        font-family: 'IBM Plex Mono', monospace;
+        font-weight: 500;
+        border: 3px solid #2a2520;
+        box-shadow: 3px 3px 0 rgba(42, 37, 32, 0.4);
+        transition: all 0.1s ease;
+        font-size: 1em; /* slightly larger */
+    }
+    
+    .nav-button:hover {
+        transform: translate(2px, 2px);
+        box-shadow: 1px 1px 0 rgba(42, 37, 32, 0.4);
+    }
+    
+    .nav-button.disabled {
+        opacity: 0.3;
+        pointer-events: none;
+    }
+        .about {
+            background: #ebe3d5;
+            border-left: 4px solid #2a2520;
+            padding: 25px;
+            margin: 30px 0;
+            font-size: 1.1em;
+        }    
+    footer {
+        background: #2a2520;
+        color: #e8dcc4;
+        padding: 30px 20px;
+        text-align: center;
+        border-top: 4px solid #1a1510;
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 1em; /* slightly larger */
+        position: relative;
+        z-index: 2;
+        margin-top: 60px;
+    }
+    
+    footer p {
+        margin: 5px 0;
+    }
+    
+    .footer-divider {
+        width: 60px;
+        height: 2px;
+        background: #e8dcc4;
+        margin: 15px auto;
+        opacity: 0.5;
+    }
+    
+    @media (max-width: 768px) {
+        .document {
+            padding: 50px 35px; /* slightly increased for mobile */
+        }
+        
+        h1 {
+            font-size: 2.2em;
+        }
+        
+        h2 {
+            font-size: 1.7em;
+        }
+        
+        h3 {
+            font-size: 1.25em;
+        }
+        
+        .nav-links {
+            gap: 18px;
+            font-size: 0.9em;
+        }
+        
+        .back-home-floating {
+            top: 15px;
+            left: 15px;
+            padding: 9px 16px;
+            font-size: 0.85em;
+        }
+        
+        article {
+            padding: 0 25px;
+        }
+    }
+</style>
+    
+    <script>
+        window.addEventListener('scroll', function() {
+            const backBtn = document.querySelector('.back-home-floating');
+            if (window.scrollY > 300) {
+                backBtn.classList.add('visible');
+            } else {
+                backBtn.classList.remove('visible');
+            }
+        });
+    </script>
+</head>
+<body>
+    <div class="paper-texture"></div>
+    
+    <a href="../index.html" class="back-home-floating">← HOME</a>
+    
+    <nav>
+        <div class="nav-content">
+            <a href="#" class="nav-home">UEFI 64-BIT Out of Thin Air</a>
+            <div class="nav-links">
+                <a href="../index.html">HOME</a>
+                <a href="../contents.html">INDEX</a>
+                <a href="../about.html">ABOUT</a>
+            </div>
+        </div>
+    </nav>
+    
+    <article>
+        <div class="document">
+            <div class="part-label">Part 1</div>
+            <h1>What an Operating System or Kernel Really Is?</h1>
+            
+            <div class="meta">
+                <span>📅 November 10, 2025</span>
+                <span>⏱️ 15 min read</span>
+                <span>🏷️ Basics</span>
+            </div>
+            
+            <div class="intro-box">
+                Hey fella, from today we will be writing our own OS, this series unlike others is frank and covers a lot of stuff from 0, it doesn’t care about academics yet deep dives into most stuff, my job is to make you a master with the perfect combination of layman’s language and technical stuff.
+            </div>
+			<p><strong>Prerequisites: </strong>C basics, what are variables, bits and bytes, what is memory, what are compilers, what are data types, etc. CPUs have registers. You must know what those are, what are memory addresses on ram, pretty much if you have learnt C basics and have some light surface level knowledge about cpu and ram you are good to go.</p>
+            <div class="image-container">
+                <img src="../images/Just the basics!.png" alt="Operating system architecture showing layers from hardware to applications">
+                <div class="image-caption">Figure 1.1: Hehehe what to say, I made this in Canva.</div>
+            </div>            
+            <h2>What an Operating System Really Is?</h2>
+            
+            <p>Now one can say an operating system is the fundamental software layer that sits between computer hardware and application programs. It manages system resources... meh thats too abstract and stupidly overwhelming we dont like abstract, lets minimise it to the core.</p>
+	
+			<p><strong>An OS/Kernel really is just code, 0s and 1s, meant to be executed by the CPU.</strong> Well yeah thats all it boils down to, lets strip it event more, lets make it naked. A kernel/OS (code) essentially just does 3 things when it comes to doing things.</p>
+			
+			
+			<p>1. Read/Write from/to CPU registers.</p>
+			<p>2. Read/Write from/to dram</p>
+			<p>3. Read/Write from/to mmio device registers</p>
+			
+			<p>And these 3 things are just memory hardware meant to hold data and nothing else, dont worry I will be explaining them</p>
+			
+			<p><strong>Well that's it, that's all we are going to code,</strong> these 3 tasks, all other code will be just about preparing data to write and interpretting data that was read. It is no rocket science, at core tbh writing OS is just data managment in an optimized way. Memory managment, process scheduling, and every other core kernel functions lie within umbrealla of these 3 kinds of read and writes.</p>
+        
+            <h3>But hey Naitik what? How do things happen then?</h3>
+            
+            <p>If all we are doing is writing and reading data from these 3 memory places, then how does stuff happen? How tf does my screen changes pixel colors and how my speaker plays music, And HOW my OS performs actions as per my mouse and keyboard inputs?</p>
+			
+            <p>See as I said kernel is just code, it is held on ram, yes the physical 4gb,8gb,32gb ram stick (its called dram). And CPU reads ram and executes this code as the system starts or one can say boots. How it got there initially will be answered in next parts. All the kernel code is about reading and writing bits to memory, <strong>different kinds of memory.</strong></p>
+			
+            <p>Different kinds of memory is the subtle detail here, we discussed them above, all 3, lets talk about the first one now that will clear it all.</p>            
+            
+            <h2>MMIO</h2>
+            
+            <p>As you know that data in memory can be located with something called address, looks like <code>0xFEDC0000</code>. In your normal coding journey you must just have used dram to read/write data, thats where variables are stored. But there is another kind of memory its called mmio space.</p>
+			
+			<p>Now if kernel has a line of code that says:</p>
+			<pre><code class="language-c">*(volatile uint16_t*)0xB8000 = 'A'</code></pre>
+			
+            <p>We are technically just writing to change data at 0xB8000 address to 01000001, thats binary for A. But believe it or not it will actually add A to your screen. Also this code is for representation only, its dummy, dummy.</p>
+			
+			<p>See what happens is, as your cpu reads this line of code, there is something called memory controller which knows if address belongs to mmio space or normal dram. It detects hey its not a normal address, its for some hardware, its for the VGA!</p>
+			<p>Yes your system has different addresses reserved for different hardware! Now the memory controller routes it to memory bus which is like a metro fricking system on the motherboard. It takes it to the vga registers and drops it there. Later VGA does what we asked it to do, display the A.</p>
+			
+            <div class="note-box">
+                <p>Each hardware device has its own registers which it uses to recieve input data from cpu and provide outputs.</p>
+            </div>
+            
+            <p>Overall MMIO is the way your kernel talks to the hardware devices, there is no direct shit like hey <code>networkcard.status=ON</code> We just write to memory addresses of mmio space, to make stuff happen.</p>
+			<p>For adding to a cpu register, things are different, since cpu directly has access to these, if it reads a kernel code having instruction for manipulating, it exclaims “Ah its for me!”, then it just directly manipulates the register, no mmio, bus involved.</p>
+            
+            <h2>But what about Input data?</h2>
+            
+            <p>That was about making an output, changing things and doing an action, what about reading inputs? Maybe the vga sent an error back, the user pressed a key on the keyboard, the network card is sending packets it received from the external world.</p>
+			<p>For inputs an interesting process happens, let’s talk about the keyboard. The CPU first receives if any key is pressed we call this i/o. When the cpu receives it what it does is it goes to part of kernel (a function) which handles inputs, we call it handler, and it generally obviously takes the input data as argument, so cpu interrupts everything else and run this handler code block, later it depends on us how we write our handler and how we use the received key data.</p>
+			
+			<h3>Wait, but how does CPU know which function to run when?</h3>
+			<p>There is something called <strong>IDT (Interrupt Descriptor Table)</strong>, as the name suggests it contains data for CPU, of which function to run on which devices interrupt, since kernel as code lies on ram, functions also lie on ram and have their own pointers. The IDT contains pointer to the functions. Actually we create IDT ourselves in later stages of booting when we are ready to handle inputs, IDT lies on dram as we store it and let CPU know its location, and CPU reads from it as it gets interrupts.</p>
+            <div class="note-box">
+                <p>Reading dram on every interrupt sucks and can make CPU slow instead there is something called interrupt controller, which stores interrupt descriptions in IDT as they run for first time. Why not load entire IDT on controller? Because controller memory is small and IDT can be huge, and many of the handlers are rarely used.</p>
+            </div>			
+			
+			<p>This is what happens for everything: a network card packet, interrupt! A file on usb pendrive interrupt and let the kernel know. And CPU mind you is very fast, it handles all interrupts from every fucking device so fast you dont even feel a delay when you press key and its typed while simultaneously the network card was sending packets for a youtube video playing in background.</p>
+
+			
+			<p><strong>DMA or Direct Memory Access:</strong> Now one hardware can interrupt CPU and say that I have brought some data back, but giving entire data to CPU or asking CPU to read it from its register, which on itself cant hold a good amount, and then ask CPU write it to ram, as you may infer that would flood CPU with so much DATA and overhead! Instead hardware devices are given direct access to memory addresses on dram where they can directly leave data and just make an interrupt, cpu checks the output register of device through mmio, and gets pointer to the dram address where returned data was written, then run the kernel handler with the data.</p>
+			
+			<h3>Confused Aren't ya?</h3>
+			
+			<p>This whole proccess me seem overwhelming let me simplify, see Kernel once booting code ends isn't a series of code like level1 --> level2 --> level3 BUT its just a bunch of functions packed together to do stuff, these can be called in any order. See CPU is let known what these function do through IDT as I said, and you will see how kernel is all just about:</p>
+			
+			<p><strong>1. Scheduling Processes:</strong> that's about executing user ran applications, maybe ms word, chrome anything. Scheduler functions are all about giving to CPU what user wants to execute and deciding order and data flow.</p>
+			<p><strong>2. Input Handling:</strong> that's about handling data returned from everything as user process ran, that data that vga has displayed chrome on screen and the data that network packet has got back with your google acc details it doesn't happen in a flow but a bunch of functions running and recieving data. Our job will be to bridge this recieved data so his acc data is also displayed as soon as chrome covers the screen.</p>	
+
+			<p>This I did just remove the upper clothing of kernel, we removed his underware when we talked about the 3 read and writes.</p>
+
+			
+			
+			<p>I use kernel and OS interchangabely but they do carry different meaning, OS is a broader term and kernel is a part of it and is the base layer of any OS, operating at ring 0 with full access. Layers in OS are just classification based on access, and Kernel is the base layer, tbh consider kernel as an entire OS for now we dont need to go in detail, this is too much unnecessary theory tbh, you can google it.</p>               
+            
+            <div class="about">
+            
+            <p>"All a Kernel or essentially the entire OS is, is code and this code contains instructions to read and write to memory and nothing else, linux, windows, mac os, you name it, what it writes and read from the memory is the magic and how its executed by the cpu is the awe."</p>
+            </div>
+            <h2>What's Next?</h2>
+            
+            <p>In Part 2, I will answer some important stuff about how C and assembly will be used during development of Our OS. How C and assembly will be combinedly used, and insights over special kind of C we will be using.</p>
+            
+
+        
+            <div class="navigation">
+                <a href="#home" class="nav-button disabled">← PREVIOUS</a>
+                <a href="#part2" class="nav-button">NEXT: C & Assembly Part 2 →(Not published)</a>
+            </div>
+
+        </div>
+            <p>If you liked this you can help by, <a target="_blank" href="https://buymeacoffee.com/naitikmundra">Buying me a Coffee</a>. If you are broke unlike me, consider emailing to naitikmundra2008@gmail.com with your feedback and suggestions, highly appreciated.</p>
+			
+    </article>
+    
+    <footer>
+        <p>UEFI 64-BIT Out of Thin Air</p>
+        <div class="footer-divider"></div>
+        <p>"The plan was to drink until the pain over, what's worse the pain or the hangover."</p>
+		<p style="opacity: 0.6; margin-top: 10px; font-size: 0.85em;">© 2025 Naitik Mundra. All rights reserved. Unauthorized reproduction or republication is prohibited.</p>
+
+    </footer>
+</body>
+</html>

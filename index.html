@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="icon" href="./images/logo.png" type="image/png">
+
+    <title>UEFI 64-BIT Out of Thin Air by Naitik Mundra</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'IBM Plex Sans', sans-serif;
+            background: #e8dcc4;
+            color: #2a2520;
+            line-height: 1.7;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .paper-texture {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.02) 2px, rgba(0,0,0,.02) 3px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,.01) 2px, rgba(0,0,0,.01) 3px);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 2;
+            flex: 1;
+        }
+        
+        .document {
+            background: #f5ede0;
+            border: 3px solid #2a2520;
+            box-shadow: 
+                6px 6px 0 rgba(42, 37, 32, 0.3),
+                inset 0 0 0 1px rgba(255,255,255,0.3);
+            padding: 60px 50px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .stamp {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            width: 80px;
+            height: 80px;
+            border: 3px solid #8b3a3a;
+            border-radius: 4px;
+            transform: rotate(12deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 500;
+            font-size: 11px;
+            color: #8b3a3a;
+            text-align: center;
+            line-height: 1.3;
+            opacity: 0.7;
+        }
+        
+        h1 {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 2.8em;
+            font-weight: 500;
+            margin-bottom: 15px;
+            letter-spacing: -1px;
+            border-bottom: 3px solid #2a2520;
+            padding-bottom: 15px;
+            text-transform: uppercase;
+        }
+        
+        .subtitle {
+            font-size: 1.5em;
+            color: #5a5550;
+            margin-bottom: 40px;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+        }
+        
+        .about {
+            background: #ebe3d5;
+            border-left: 4px solid #2a2520;
+            padding: 25px;
+            margin: 30px 0;
+            font-size: 1.2em;
+        }
+        
+        .about p {
+            margin-bottom: 15px;
+        }
+        
+        .about p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .start-button {
+            display: inline-block;
+            background: #2a2520;
+            color: #f5ede0;
+            padding: 18px 45px;
+            text-decoration: none;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 500;
+            font-size: 1.1em;
+            border: 3px solid #2a2520;
+            box-shadow: 4px 4px 0 rgba(42, 37, 32, 0.4);
+            transition: all 0.1s ease;
+            letter-spacing: 1px;
+            margin-top: 20px;
+        }
+        
+        .start-button:hover {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0 rgba(42, 37, 32, 0.4);
+        }
+        
+        .start-button:active {
+            transform: translate(4px, 4px);
+            box-shadow: none;
+        }
+        
+        .index-link {
+            display: inline-block;
+            color: #2a2520;
+            text-decoration: none;
+            font-family: 'IBM Plex Mono', monospace;
+            border-bottom: 2px solid #2a2520;
+            padding-bottom: 2px;
+            margin-top: 20px;
+            transition: opacity 0.2s;
+        }
+        
+        .index-link:hover {
+            opacity: 0.6;
+        }
+        
+        footer {
+            background: #2a2520;
+            color: #e8dcc4;
+            padding: 30px 20px;
+            text-align: center;
+            border-top: 4px solid #1a1510;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 1.1em;
+            position: relative;
+            z-index: 2;
+        }
+        
+        footer p {
+            margin: 5px 0;
+        }
+        
+        .footer-divider {
+            width: 60px;
+            height: 2px;
+            background: #e8dcc4;
+            margin: 15px auto;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="paper-texture"></div>
+    
+    <div class="container">
+        <div class="document">
+            <div class="stamp">0x4F<br>0x53</div>
+            
+            <h1>UEFI 64-BIT out of thin air</h1>
+            <div class="subtitle">A Modern OS dev series for absolute beginners by Naitik Mundra.</div>
+            
+            <div class="about">
+				<p>I am Naitik Mundra, I am a full stack web developer. Pretty weird huh? A web dev guy teaches you OS. But this journey started in OCT 2025, when I decided to document my OS dev learning journey in a tutorial way, I will edit it from time as I learn more and more. And at end it will become a tutorial for absolute beginners, so they can grow a x86_64 UEFI 64 BIT Modern OS Out of Thin Air. </p>
+				
+                <p>Unlike most operating system tutorials that stick to legacy BIOS and 32-bit environments, our OS targets modern hardware — it’s built for UEFI firmware and 64-bit processors from the ground up. I will still teach about legacy to clear your basics, but I will keep it concise yet informative enough. And it will be in fun and informal in tone, <strong>but just the tone not content.</strong></p>
+
+            </div>
+            
+            <a href="./posts/Part-1-What-An-OS-Really-Is.html" class="start-button">BEGIN WITH PART 1</a>
+            <br>
+            <a href="./contents.html" class="index-link">VIEW ALL PARTS INDEX →</a>
+        </div>
+    </div>
+    
+    <footer>
+        <p>UEFI 64-BIT Out of Thin Air</p>
+        <div class="footer-divider"></div>
+        <p>"We are all in the gutter, but some of us are looking at the stars."</p>
+		<p style="opacity: 0.6; margin-top: 10px; font-size: 0.85em;">© 2025 Naitik Mundra. All rights reserved. Unauthorized reproduction or republication is prohibited.</p>
+
+    </footer>
+</body>
+</html>
