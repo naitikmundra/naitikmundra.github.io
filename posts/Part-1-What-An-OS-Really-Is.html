@@ -489,7 +489,10 @@
             </div>			
 			
 			<p>This is what happens for everything: a network card packet, interrupt! A file on usb pendrive interrupt and let the kernel know. And CPU mind you is very fast, it handles all interrupts from every fucking device so fast you dont even feel a delay when you press key and its typed while simultaneously the network card was sending packets for a youtube video playing in background.</p>
-
+            <div class="image-container">
+                <img src="../images/flow1.png" alt="Input Interrupt Flow">
+                <div class="image-caption">Figure 1.2: Input Interrupt Flow (Dont take the represented IDT litreally).</div>
+            </div>    
 			
 			<p><strong>DMA or Direct Memory Access:</strong> Now one hardware can interrupt CPU and say that I have brought some data back, but giving entire data to CPU or asking CPU to read it from its register, which on itself cant hold a good amount, and then ask CPU write it to ram, as you may infer that would flood CPU with so much DATA and overhead! Instead hardware devices are given direct access to memory addresses on dram where they can directly leave data and just make an interrupt, cpu checks the output register of device through mmio, and gets pointer to the dram address where returned data was written, then run the kernel handler with the data.</p>
 			
@@ -507,18 +510,36 @@
 
 
 			
-			
-			<p>I use kernel and OS interchangabely but they do carry different meaning, OS is a broader term and kernel is a part of it and is the base layer of any OS, operating at ring 0 with full access. Layers in OS are just classification based on access, and Kernel is the base layer, tbh consider kernel as an entire OS for now we dont need to go in detail, this is too much unnecessary theory tbh, you can google it.</p>               
-            
+            <h2>The Rings</h2>			
+			<p>I use kernel and OS interchangabely but they do carry different meaning, OS is a broader term and kernel is a part of it and is the base layer of any OS, operating at ring 0 with full access. Layers in OS are just classification based on access, and Kernel is the base layer.</p>               
+			<pre><code class="language-c">Ring 0  → Highest privilege (kernel)
+Ring 1  → Medium privilege
+Ring 2  → Low privilege
+Ring 3  → Lowest privilege (user apps)</code></pre>		
+<p>The CPU checks privilege in two ways:</p>
 
+<p><strong>For instructions:</strong> The CPU checks your current Ring 
+level (from the CS register) before running privileged instructions. CPU is hardcoded to know which instruction is privelleged and which is not.</p>
+
+<p><strong>For memory access:</strong> There is Page tables, which act like a big lookup table. Each memory page has a User/Supervisor bit. If you're in Ring 3
+and try to access a supervisor-only page, you get a Page Fault: 
+"Ah you are not allowed!"</p>
+	
+			<h2>Registers</h2>
+			<p>The last memory we discussed, so your CPU has registers, these are very tiny yet really fast memory, CPU has direct access to these, there are various kinds as you must know.</p>
 			
+			
+			<p><strong>1.General-purpose registers: </strong>hold data or addresses temporarily, basically we can hold our normal data here during operations, like variables or pointers to them.</p>
+			<p><strong>2.Program counter (PC): </strong>holds address of next instruction. Well since genrally upcoming instruction is already cached in L1, L2 or L3, CPU doesnt go to ram for every next instruction or line of code.</p>
+			<p><strong>3.Segment Registers: </strong><code>CS</code> (Code Segment) Register holds GDT and privelege level. Privelege level is the ring level 0,1,2,3 we talked earlier, determines if some instructions can be executed or not, so CPU checks level in CS registers last 2 bits, before executing the instruction.</p>	
+			<p>There are many such registers we wont go through all of them in this chapter but for now understand register are used for both fast memory and some important variables such as ring mode we discussed.</p>			
             <div class="about">
             
             <p>"All a Kernel or essentially the entire OS is, is code and this code contains instructions to read and write to memory and nothing else, linux, windows, mac os, you name it, what it writes and read from the memory is the magic and how its executed by the cpu is the awe."</p>
             </div>
             <h2>What's Next?</h2>
             
-            <p>In Part 2, CPU registers will be discussed, I will answer some important stuff about how C and assembly will be used during development of Our OS. How C and assembly will be combinedly used, and insights over special kind of C we will be using.</p>
+            <p>In Part 2, I will answer some important stuff about how C and assembly will be used during development of Our OS. How C and assembly will be combinedly used, and insights over special kind of C we will be using.</p>
             
 
         
