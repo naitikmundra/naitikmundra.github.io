@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Naitik Mundra - Full Stack Developer & DevOps Engineer</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'IBM Plex Sans', sans-serif;
+            background: #e8dcc4;
+            color: #2a2520;
+            line-height: 1.7;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .paper-texture {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,.02) 2px, rgba(0,0,0,.02) 3px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(0,0,0,.01) 2px, rgba(0,0,0,.01) 3px);
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 2;
+            flex: 1;
+        }
+        
+        .document {
+            background: #f5ede0;
+            border: 3px solid #2a2520;
+            box-shadow: 
+                6px 6px 0 rgba(42, 37, 32, 0.3),
+                inset 0 0 0 1px rgba(255,255,255,0.3);
+            padding: 50px 45px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        
+        .stamp {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            width: 75px;
+            height: 75px;
+            border: 2px solid #7a4a4a;
+            border-radius: 4px;
+            transform: rotate(15deg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 500;
+            font-size: 10px;
+            color: #7a4a4a;
+            text-align: center;
+            line-height: 1.3;
+            opacity: 0.6;
+        }
+        
+        h1 {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 2.5em;
+            font-weight: 500;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+            border-bottom: 3px solid #2a2520;
+            padding-bottom: 12px;
+            text-transform: uppercase;
+        }
+        
+        .subtitle {
+            font-size: 1em;
+            color: #5a5550;
+            margin-bottom: 30px;
+            font-weight: 300;
+            letter-spacing: 0.5px;
+        }
+        
+        .intro-box {
+            background: #ebe3d5;
+            border-left: 4px solid #2a2520;
+            padding: 20px;
+            margin: 25px 0;
+            font-size: 0.95em;
+            line-height: 1.6;
+        }
+        
+        .intro-box p {
+            margin-bottom: 10px;
+        }
+        
+        .intro-box p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .action-button {
+            display: inline-block;
+            background: #2a2520;
+            color: #f5ede0;
+            padding: 15px 35px;
+            text-decoration: none;
+            font-family: 'IBM Plex Mono', monospace;
+            font-weight: 500;
+            font-size: 0.95em;
+            border: 3px solid #2a2520;
+            box-shadow: 4px 4px 0 rgba(42, 37, 32, 0.4);
+            transition: all 0.1s ease;
+            letter-spacing: 0.5px;
+            margin-top: 15px;
+            margin-right: 10px;
+            cursor: pointer;
+        }
+        
+        .action-button:hover {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0 rgba(42, 37, 32, 0.4);
+        }
+        
+        .action-button:active {
+            transform: translate(4px, 4px);
+            box-shadow: none;
+        }
+        
+        .index-link {
+            display: inline-block;
+            color: #2a2520;
+            text-decoration: none;
+            font-family: 'IBM Plex Mono', monospace;
+            border-bottom: 2px solid #2a2520;
+            padding-bottom: 2px;
+            margin-top: 15px;
+            font-size: 0.9em;
+            transition: opacity 0.2s;
+        }
+        
+        .index-link:hover {
+            opacity: 0.6;
+        }
+        
+        h2 {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 1.8em;
+            font-weight: 500;
+            margin-bottom: 30px;
+            color: #2a2520;
+            letter-spacing: -0.5px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #2a2520;
+            text-transform: uppercase;
+        }
+        
+        .experience-item {
+            margin-bottom: 35px;
+            padding-bottom: 35px;
+            border-bottom: 1px solid #d4cbc0;
+        }
+        
+        .experience-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+        
+        .job-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .job-title {
+            font-size: 1.2em;
+            font-weight: 500;
+            color: #2a2520;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+        
+        .job-period {
+            font-size: 0.9em;
+            color: #5a5550;
+            font-weight: 400;
+        }
+        
+        .job-role {
+            display: inline-block;
+            font-size: 0.85em;
+            background-color: #ebe3d5;
+            color: #2a2520;
+            padding: 5px 12px;
+            border: 1px solid #d4cbc0;
+            font-weight: 400;
+            margin-top: 5px;
+        }
+        
+        .job-description {
+            color: #3a3530;
+            margin: 12px 0 15px;
+            font-size: 0.95em;
+        }
+        
+        .highlights {
+            list-style: none;
+            margin: 12px 0;
+        }
+        
+        .highlights li {
+            padding: 6px 0 6px 22px;
+            position: relative;
+            color: #3a3530;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+        
+        .highlights li:before {
+            content: "»";
+            position: absolute;
+            left: 0;
+            color: #7a4a4a;
+            font-weight: bold;
+        }
+        
+        .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        .tag {
+            display: inline-block;
+            background-color: #ebe3d5;
+            color: #2a2520;
+            padding: 5px 11px;
+            border: 1px solid #d4cbc0;
+            font-size: 0.85em;
+            font-weight: 400;
+        }
+        
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+        
+        .project-card {
+            background-color: #ebe3d5;
+            padding: 22px;
+            border: 2px solid #d4cbc0;
+            box-shadow: 3px 3px 0 rgba(42, 37, 32, 0.1);
+            transition: all 0.2s ease;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .project-card:hover {
+            border-color: #2a2520;
+            box-shadow: 4px 4px 0 rgba(42, 37, 32, 0.2);
+            transform: translate(-2px, -2px);
+        }
+        
+        .project-card h3 {
+            font-size: 1.1em;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #2a2520;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+        
+        .project-card p {
+            font-size: 0.9em;
+            color: #5a5550;
+            margin-bottom: 15px;
+            line-height: 1.5;
+            flex-grow: 1;
+        }
+        
+        .project-card .external-link {
+            display: inline-block;
+            color: #2a2520;
+            font-weight: 500;
+            font-size: 0.9em;
+            border-bottom: 2px solid #2a2520;
+            padding-bottom: 2px;
+            text-decoration: none;
+        }
+        
+        .project-card:hover .external-link {
+            opacity: 0.7;
+        }
+        
+        footer {
+            background: #2a2520;
+            color: #e8dcc4;
+            padding: 30px 20px;
+            text-align: center;
+            border-top: 4px solid #1a1510;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85em;
+            position: relative;
+            z-index: 2;
+        }
+        
+        footer p {
+            margin: 5px 0;
+        }
+        
+        .footer-divider {
+            width: 60px;
+            height: 2px;
+            background: #e8dcc4;
+            margin: 12px auto;
+            opacity: 0.5;
+        }
+        
+        @media (max-width: 768px) {
+            .document {
+                padding: 35px 25px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            h2 {
+                font-size: 1.5em;
+            }
+            
+            .stamp {
+                width: 65px;
+                height: 65px;
+                font-size: 9px;
+                top: 15px;
+                right: 20px;
+            }
+            
+            .job-header {
+                flex-direction: column;
+            }
+            
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .action-button {
+                padding: 12px 28px;
+                font-size: 0.9em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="paper-texture"></div>
+    
+    <div class="container">
+        <div class="document">
+            <div class="stamp">DEVELOPER<br>PORTFOLIO</div>
+            
+            <h1>Naitik Mundra</h1>
+            <div class="subtitle">Full Stack Web Developer · DevOps Engineer</div>
+            
+            <div class="intro-box">
+                <p>Building robust web applications and deploying them at scale. Specialized in full-stack development, system administration, and cloud infrastructure.</p>
+                <p>Passionate about creating clean, maintainable code and solving complex technical challenges.</p>
+            </div>
+            
+            <a href="#experience" class="action-button">EXPERIENCE</a>
+            <a href="#projects" class="action-button">PROJECTS</a>
+            <a href="https://github.com/naitikmundra" target="_blank" class="action-button">GITHUB</a>
+            <br>
+            <a href="mailto:naitikmundra18@gmail.com" class="index-link">GET IN TOUCH →</a>
+        </div>
+        
+        <div class="document" id="experience">
+            <h2>Experience</h2>
+
+            <div class="experience-item">
+                <div class="job-header">
+                    <h3 class="job-title">Network18 — Web Inventory & Events</h3>
+                    <span class="job-period">Aug 2025 - Dec 2025</span>
+                </div>
+                <span class="job-role">Freelance Web Contract</span>
+                <p class="job-description">Built a comprehensive Web Inventory, Events & Studios Management System for pan-India Network18 operations.</p>
+                <ul class="highlights">
+                    <li>Designed features for managing studios, gate passes, and event reports with PDF & Excel exports</li>
+                    <li>Implemented RBAC & PBAC systems for secure role and permission handling</li>
+                    <li>Backend: Express.js + MySQL | Frontend: React.js + Next.js with modular and DRY architecture</li>
+                    <li>Implemented queue-based cron job email system for efficiency</li>
+                    <li>Deployed application on VPS with industry-standard best practices</li>
+                </ul>
+                <div class="tags">
+                    <span class="tag">Express.js</span>
+                    <span class="tag">MySQL</span>
+                    <span class="tag">React.js</span>
+                    <span class="tag">Next.js</span>
+                    <span class="tag">RBAC/PBAC</span>
+                    <span class="tag">DevOps</span>
+                </div>
+            </div>
+
+            <div class="experience-item">
+                <div class="job-header">
+                   <h3 class="job-title">
+  <a href="https://pypi.org/project/airflask/" target="_blank" rel="noopener noreferrer">
+    AirFlask — Flask Deployment CLI
+  </a>
+</h3>
+                    <span class="job-period">Feb 2025 - Present</span>
+                </div>
+                <span class="job-role">Maintainer & Author</span>
+                <p class="job-description">Open-source CLI tool that automates Flask app deployment with Nginx and Gunicorn on Linux servers.</p>
+                <ul class="highlights">
+                    <li>Integrated SSL setup using Let's Encrypt for secure HTTPS configuration</li>
+                    <li>Automated reverse proxy setup, systemd service creation, and domain linking</li>
+                    <li>One-line deployment solution for small Flask projects to VPS servers</li>
+                    <li>Designed for fast, effortless deployment with industry best practices</li>
+                </ul>
+                <div class="tags">
+                    <span class="tag">Python</span>
+                    <span class="tag">Flask</span>
+                    <span class="tag">Nginx</span>
+                    <span class="tag">Gunicorn</span>
+                    <span class="tag">DevOps</span>
+                    <span class="tag">Open Source</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="document" id="projects">
+            <h2>Other Projects</h2>
+            <div class="projects-grid">
+                <a href="https://simplyrenit.com/" target="_blank" class="project-card">
+                    <h3>SimplyRent</h3>
+                    <p>A rental marketplace with e-commerce-style listings, real-time chat functionality, and seamless user experience.</p>
+                    <span class="external-link">Visit →</span>
+                </a>
+
+                <a href="https://genospark.in" target="_blank" class="project-card">
+                    <h3>GenoSpark</h3>
+                    <p>Admin panel for managing cloud certifications and courses. Includes resource creation and payment interface integration.</p>
+                    <span class="external-link">Visit →</span>
+                </a>
+
+                <a href="https://studentlogs.in/" target="_blank" class="project-card">
+                    <h3>StudentLogs</h3>
+                    <p>One-click registration ERP system for small coaching centers with automated WhatsApp and Telegram communication.</p>
+                    <span class="external-link">Visit →</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="document">
+            <h2>Contact</h2>
+            <div class="intro-box">
+                <p>I'm always interested in discussing new projects, creative ideas, and opportunities to work on interesting problems.</p>
+            </div>
+            <a href="mailto:naitikmundra18@gmail.com" class="action-button">SEND EMAIL</a>
+            <a href="https://www.linkedin.com/in/naitikmundra/" target="_blank" class="action-button">LINKEDIN</a>
+            <a href="https://github.com/naitikmundra" target="_blank" class="action-button">GITHUB</a>
+        </div>
+    </div>
+    
+    <footer>
+        <p>NAITIK MUNDRA</p>
+        <div class="footer-divider"></div>
+        <p>naitikmundra18@gmail.com</p>
+    </footer>
+
+    <script>
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
