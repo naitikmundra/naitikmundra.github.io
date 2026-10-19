@@ -24,21 +24,16 @@ html.touch,html.touch body{touch-action:none;user-select:none;-webkit-user-selec
 #gsub{font-size:13px;opacity:.75;max-width:420px}
 #gb{display:none;font:bold 18px monospace;padding:14px 28px;border-radius:12px;border:2px solid #e8b923;background:#2a2d28;color:#e8b923;cursor:pointer}
 #tc{position:fixed;inset:0;z-index:20;pointer-events:none}
-.sl{position:fixed;top:56px;bottom:8px;width:60px;border-radius:30px;background:#222c;border:1px solid #666;pointer-events:auto;touch-action:none}
-.sl::before{content:'';position:absolute;left:50%;top:22px;bottom:22px;width:4px;margin-left:-2px;background:#555;border-radius:2px}
-#thS{left:calc(env(safe-area-inset-left,0px) + 6px)}
-#brS{right:calc(env(safe-area-inset-right,0px) + 6px)}
-.lb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;writing-mode:vertical-rl;color:#bdb8a4;font:11px monospace;letter-spacing:3px;opacity:.55;pointer-events:none}
-.kn{position:absolute;left:4px;right:4px;height:44px;border-radius:22px;border:2px solid #bdb8a4;pointer-events:none;top:calc(100% - 44px)}
-#thK{background:#2a6b2a}
-#brK{background:#7a2a22;top:0}
-#grid{position:fixed;right:calc(env(safe-area-inset-right,0px) + 72px);bottom:8px;width:clamp(124px,17vw,200px);display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.tb{height:clamp(46px,15vh,72px);pointer-events:auto;border:2px solid #8a8a80;border-radius:12px;background:#2a2d28dd;color:#bdb8a4;font:bold 12px monospace;white-space:pre;text-align:center;touch-action:none;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
+/* button columns sit on the cab pillars (outside the windscreen) so they never cover the view or the levers */
+#lcol,#rcol{position:fixed;width:max(64px,calc(13vw - 14px));display:flex;flex-direction:column;gap:6px}
+#lcol{left:calc(env(safe-area-inset-left,0px) + 6px);top:8px}
+#rcol{right:calc(env(safe-area-inset-right,0px) + 6px);bottom:8px}
+.tb{height:clamp(42px,13vh,58px);pointer-events:auto;border:2px solid #8a8a80;border-radius:12px;background:#2a2d28dd;color:#bdb8a4;font:bold 12px monospace;white-space:pre;text-align:center;touch-action:none;display:flex;align-items:center;justify-content:center;padding:0;cursor:pointer}
 .tb.on{background:#e8b923;color:#111;box-shadow:0 0 14px #e8b923}
 #bSlip{pointer-events:none}
 #bSlip.on{background:#e03020;color:#fff;box-shadow:0 0 14px #e03020}
+#bHorn{height:clamp(58px,22vh,90px);font-size:14px}
 #bHorn.on{background:#e0a020;box-shadow:0 0 14px #e0a020}
-#bPause{position:fixed;left:calc(env(safe-area-inset-left,0px) + 76px);top:8px;width:56px;height:40px;font-size:18px}
 #pause{position:fixed;inset:0;z-index:40;background:#000a;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--fg);font:14px monospace}
 #pause h2{margin:0;font-size:24px;letter-spacing:4px}
 #pause button{font:bold 16px monospace;padding:12px 24px;min-width:220px;border-radius:10px;border:2px solid #8a8a80;background:#2a2d28;color:var(--fg);cursor:pointer}
@@ -51,10 +46,8 @@ html.touch,html.touch body{touch-action:none;user-select:none;-webkit-user-selec
 
 <div id="gate"><div id="gi">📱</div><div id="gt"></div><div id="gsub"></div><button id="gb">⛶ Enter full screen</button></div>
 <div id="tc">
-  <div class="sl" id="thS"><div class="lb">THROTTLE</div><div class="kn" id="thK"></div></div>
-  <div class="sl" id="brS"><div class="lb">BRAKE</div><div class="kn" id="brK"></div></div>
-  <div id="grid"><div class="tb" id="bSlip">SLIP</div><button class="tb" id="bSand">SAND</button><button class="tb" id="bLamp">LIGHT</button><button class="tb" id="bHorn">HORN</button></div>
-  <button class="tb" id="bPause">⏸</button>
+  <div id="lcol"><button class="tb" id="bPause">⏸ PAUSE</button><button class="tb" id="bLamp">LIGHT</button><button class="tb" id="bSand">SAND</button></div>
+  <div id="rcol"><div class="tb" id="bSlip">SLIP</div><button class="tb" id="bHorn">HORN</button></div>
 </div>
 <div id="pause"><h2>PAUSED</h2><div id="pinfo"></div><button id="pRes">▶ Resume</button><button id="pRul">📖 Rules</button><button id="pEnd">■ End run</button></div>
 
@@ -302,6 +295,9 @@ function sky(hor,F){
 /* ---------- drawing: world ---------- */
 function world(){
   const hor=H*.36,F=H*.65,CH=2.6,cx=W/2,off=z=>gg(s+z)-gg(s)-gp(s)*z;LT=[];TR=[];
+  /* trackside boards are drawn at true perspective scale: tiny when far, text only when it is big enough to read.
+     SZ/SZB enlarge the physical size a little on phones so they stay readable at a useful distance. */
+  const SZ=TOUCH?1.8:1,SZB=TOUCH?1.3:1,MINF=TOUCH?4.5:4;
   sky(hor,F);
   let gr=g.createLinearGradient(0,hor,0,H);gr.addColorStop(0,rgb(GC));gr.addColorStop(1,rgb(GB));g.fillStyle=gr;g.fillRect(-10,hor,W+20,H);
   g.fillStyle='rgba(0,0,0,.06)';for(let d=Math.floor(s/24)*24;d<s+400;d+=24){const z1=Math.max(2,d-s),z2=d+12-s;if(z2<2)continue;g.fillRect(-10,hor+CH*F/z2,W+20,CH*F/z1-CH*F/z2)}
@@ -351,12 +347,15 @@ function world(){
     if(x<-sc*8-60||x>W+sc*8+60)continue;
     if(e.k=='nb'&&z>450)continue;
     if(e.k=='t'){tree(e,x,gy,sc,fg);if(!e.b)TR.push({x,top:gy-e.h*sc,bot:gy,w:e.h*sc*(e.kd==2?.34:.22),i:ii})}
-    else if(e.k=='sign'){const R=Math.max(2.5,.65*sc),cy=gy-2.4*sc;g.fillStyle='#777';g.fillRect(x-.07*sc,cy,.14*sc,gy-cy);
-      g.beginPath();g.arc(x,cy,R,0,7);g.fillStyle='#f4f1e6';g.fill();g.strokeStyle='#c0291f';g.lineWidth=Math.max(1,.2*sc);g.stroke();
-      g.fillStyle='#111';g.font=`bold ${R*(e.o.lim>99?.8:1.05)}px sans-serif`;g.fillText(e.o.lim,x,cy+R*.05)}
+    else if(e.k=='sign'){const R=.65*SZ*sc;
+      if(R>=.9){const cy=gy-2.4*sc;g.fillStyle='#777';g.fillRect(x-.07*sc,cy,.14*sc,gy-cy);
+        g.beginPath();g.arc(x,cy,R,0,7);g.fillStyle='#f4f1e6';g.fill();g.strokeStyle='#c0291f';g.lineWidth=Math.max(.6,.2*SZ*sc);g.stroke();
+        const fz=R*(e.o.lim>99?.8:1.05);if(fz>=MINF){g.fillStyle='#111';g.font=`bold ${fz}px sans-serif`;g.fillText(e.o.lim,x,cy+R*.05)}}}
     else if(e.k=='gs'){const cy=gy-2.6*sc,R=.85*sc;g.fillStyle='#777';g.fillRect(x-.06*sc,cy,.12*sc,gy-cy);g.beginPath();g.moveTo(x,cy-R);g.lineTo(x+R*.95,cy+R*.6);g.lineTo(x-R*.95,cy+R*.6);g.closePath();g.fillStyle='#f4f1e6';g.fill();g.strokeStyle='#c0291f';g.lineWidth=Math.max(1,.16*sc);g.stroke();g.fillStyle='#111';g.font=`bold ${Math.max(5,.9*sc)}px sans-serif`;g.fillText('~',x,cy+R*.15)}
-    else if(e.k=='hs'){const w=1.5*sc,h=1.1*sc,cy=gy-2.6*sc;g.fillStyle='#777';g.fillRect(x-.06*sc,cy,.12*sc,gy-cy);g.fillStyle='#1f5fa6';g.fillRect(x-w/2,cy-h/2,w,h);
-      g.strokeStyle='#fff';g.lineWidth=Math.max(1,.07*sc);g.strokeRect(x-w/2+.07*sc,cy-h/2+.07*sc,w-.14*sc,h-.14*sc);g.fillStyle='#fff';g.font=`bold ${Math.max(5,.8*sc)}px sans-serif`;g.fillText('W',x,cy+.04*sc)}
+    else if(e.k=='hs'){const w=1.5*SZ*sc,h=1.1*SZ*sc;
+      if(w>=2.5){const cy=gy-2.6*sc;g.fillStyle='#777';g.fillRect(x-.06*sc,cy,.12*sc,gy-cy);g.fillStyle='#1f5fa6';g.fillRect(x-w/2,cy-h/2,w,h);
+        const ins=.07*SZ*sc;g.strokeStyle='#fff';g.lineWidth=Math.max(.5,.07*SZ*sc);g.strokeRect(x-w/2+ins,cy-h/2+ins,w-2*ins,h-2*ins);
+        const fz=.8*SZ*sc;if(fz>=MINF){g.fillStyle='#fff';g.font=`bold ${fz}px sans-serif`;g.fillText('W',x,cy+.04*sc)}}}
     else if(e.k=='sig'){const o=e.o;g.fillStyle='#555';g.fillRect(x-.08*sc,gy-5.5*sc,.16*sc,5.5*sc);
       g.fillStyle='#16181a';g.fillRect(x-.33*sc,gy-5.6*sc,.66*sc,1.8*sc);
       [[5,o.red,'#ff3a2a','#2e1512'],[4.3,!o.red,'#ffd21f','#2e2a10']].forEach(([h,on,c1,c0])=>{
@@ -369,15 +368,18 @@ function world(){
       const bl=Math.floor(T*2.2)%2;[[-.45,bl],[.45,1-bl]].forEach(([dx,on])=>{const rr=Math.max(1,.2*sc),lx=x+dx*sc,ly=gy-2.2*sc;g.beginPath();g.arc(lx,ly,rr,0,7);g.fillStyle='#3a1512';g.fill();if(act&&on)glow(lx,ly,rr,'#ff3a2a',z,ii)});
       const ay=gy-1.1*sc,tx=act?x-sd*1.9*sc:x-sd*.7*sc,ty=act?ay:ay-1.6*sc;g.lineCap='round';g.strokeStyle='#d33a2a';g.lineWidth=Math.max(1,.16*sc);g.beginPath();g.moveTo(x,ay);g.lineTo(tx,ty);g.stroke();
       g.strokeStyle='#f4f1e6';g.setLineDash([.3*sc,.3*sc]);g.beginPath();g.moveTo(x,ay);g.lineTo(tx,ty);g.stroke();g.setLineDash([]);g.lineCap='butt'}
-    else if(e.k=='nb'){const nm=e.o.name,bw=9*sc,bh=2.4*sc,yb=gy-1.7*sc,yt=yb-bh,fs=Math.max(5,Math.min(bh*.55,bw*.92/(nm.length*.6)));
-      g.fillStyle='#777';g.fillRect(x-bw*.4,yb,Math.max(1,.14*sc),1.7*sc);g.fillRect(x+bw*.4,yb,Math.max(1,.14*sc),1.7*sc);
-      g.fillStyle='#1f4e79';g.fillRect(x-bw/2,yt,bw,bh);g.strokeStyle='#fff';g.lineWidth=Math.max(1,.06*sc);g.strokeRect(x-bw/2+.1*sc,yt+.1*sc,bw-.2*sc,bh-.2*sc);
-      g.fillStyle='#fff';g.font=`bold ${fs}px sans-serif`;g.fillText(nm,x,yt+bh/2)}
+    else if(e.k=='nb'){const nm=e.o.name,bw=9*SZB*sc,bh=2.4*SZB*sc;
+      if(bh>=3){const yb=gy-1.7*sc,yt=yb-bh;
+        g.fillStyle='#777';g.fillRect(x-bw*.4,yb,Math.max(.8,.14*sc),1.7*sc);g.fillRect(x+bw*.4,yb,Math.max(.8,.14*sc),1.7*sc);
+        g.fillStyle='#1f4e79';g.fillRect(x-bw/2,yt,bw,bh);g.strokeStyle='#fff';g.lineWidth=Math.max(.5,.06*SZB*sc);g.strokeRect(x-bw/2+.1*SZB*sc,yt+.1*SZB*sc,bw-.2*SZB*sc,bh-.2*SZB*sc);
+        const fs=Math.min(bh*.55,bw*.92/(nm.length*.6));if(fs>=MINF){g.fillStyle='#fff';g.font=`bold ${fs}px sans-serif`;g.fillText(nm,x,yt+bh/2)}}}
     else if(e.k=='house'){const w=7*sc,h=4*sc;g.fillStyle=mix(e.c>.5?[190,170,140]:[150,110,90],FOG,fg);g.fillRect(x-w/2,gy-h,w,h);g.fillStyle=mix([90,50,40],FOG,fg);g.beginPath();g.moveTo(x-w*.6,gy-h);g.lineTo(x,gy-h-3*sc);g.lineTo(x+w*.6,gy-h);g.fill();g.fillStyle=mix([60,80,100],FOG,fg);g.fillRect(x-w*.3,gy-h*.7,w*.2,h*.35);g.fillRect(x+w*.1,gy-h*.7,w*.2,h*.35)}
     else if(e.k=='sh'){g.fillStyle='#4a4d52';g.fillRect(x-2*sc,gy-2.6*sc,4*sc,.2*sc);g.fillRect(x-1.9*sc,gy-2.4*sc,.12*sc,2.4*sc);g.fillRect(x+1.8*sc,gy-2.4*sc,.12*sc,2.4*sc);g.fillStyle='rgba(150,190,210,.35)';g.fillRect(x-1.8*sc,gy-2.4*sc,3.6*sc,1.8*sc);g.fillStyle='#6b4a2a';g.fillRect(x-1.3*sc,gy-.6*sc,2.6*sc,.12*sc)}
     else if(e.k=='lp'){g.fillStyle='#444';g.fillRect(x-.05*sc,gy-4*sc,.1*sc,4*sc);g.fillRect(x-.4*sc,gy-4*sc,.5*sc,.1*sc);const r=Math.max(1,.14*sc);g.beginPath();g.arc(x-.4*sc,gy-3.9*sc,r,0,7);g.fillStyle='#b8b49a';g.fill();if(LV<.6)glow(x-.4*sc,gy-3.9*sc,r,'#ffe9a0',z,ii)}
-    else if(e.k=='ss'){const y=gy-sc;g.fillStyle='#777';g.fillRect(x-.06*sc,y-2.4*sc,.12*sc,2.4*sc);g.fillStyle='#b3261e';g.fillRect(x-.7*sc,y-2.9*sc,1.4*sc,1*sc);g.strokeStyle='#fff';g.lineWidth=Math.max(1,.07*sc);g.strokeRect(x-.62*sc,y-2.82*sc,1.24*sc,.84*sc);
-      g.fillStyle='#fff';g.font=`bold ${Math.max(5,.46*sc)}px sans-serif`;g.fillText('STOP',x,y-2.4*sc)}
+    else if(e.k=='ss'){const y=gy-sc,bw=1.4*SZ*sc,bh=SZ*sc;
+      if(bw>=2.5){g.fillStyle='#777';g.fillRect(x-.06*sc,y-2.4*sc,.12*sc,2.4*sc);g.fillStyle='#b3261e';g.fillRect(x-bw/2,y-2.9*sc,bw,bh);
+        const ins=.08*SZ*sc;g.strokeStyle='#fff';g.lineWidth=Math.max(.5,.07*SZ*sc);g.strokeRect(x-bw/2+ins,y-2.9*sc+ins,bw-2*ins,bh-2*ins);
+        const fz=.46*SZ*sc;if(fz>=MINF){g.fillStyle='#fff';g.font=`bold ${fz}px sans-serif`;g.fillText('STOP',x,y-2.9*sc+bh/2)}}}
     else if(e.k=='end'){g.fillStyle='#777';g.fillRect(x-.08*sc,gy-3*sc,.16*sc,3*sc);g.fillStyle='#e8b923';g.fillRect(x-1.4*sc,gy-4*sc,2.8*sc,1.4*sc);
       g.fillStyle='#111';g.font=`bold ${Math.max(5,.9*sc)}px sans-serif`;g.fillText('END',x,gy-3.3*sc)}
   }
@@ -422,11 +424,14 @@ function gaugeFace(x,y,r,max,maj,minor,unit){
 }
 function gaugeNeedle(x,y,r,val,max){const a=(135+270*clamp(val/max,0,1))*Math.PI/180;g.strokeStyle='#ff9d3a';g.lineWidth=3;g.beginPath();g.moveTo(x-Math.cos(a)*r*.15,y-Math.sin(a)*r*.15);g.lineTo(x+Math.cos(a)*r*.85,y+Math.sin(a)*r*.85);g.stroke();
   g.fillStyle='#222';g.beginPath();g.arc(x,y,r*.07,0,7);g.fill()}
-function lever(x,y,val,label,L){
+/* levers: same look on desktop and touch; on touch they are a bit bigger, swing wider and are dragged with a finger */
+const LSW=120;   /* touch swing, degrees */
+function lvGeo(){const L=Math.min(H*.12,W*.08)*(TOUCH?1.35:1);return{L,ly:H-L*.5,tx:W*.18,bx:W*.82}}
+function lever(x,y,val,label,L,SW=100,kr=.2){
   g.fillStyle='#2b2d29';g.beginPath();g.ellipse(x,y,L*.45,L*.18,0,0,7);g.fill();
-  const a=(-90+(val-.5)*100)*Math.PI/180,kx=x+Math.cos(a)*L,ky=y+Math.sin(a)*L;
+  const a=(-90+(val-.5)*SW)*Math.PI/180,kx=x+Math.cos(a)*L,ky=y+Math.sin(a)*L;
   g.strokeStyle='#8c8c84';g.lineWidth=L*.12;g.lineCap='round';g.beginPath();g.moveTo(x,y);g.lineTo(kx,ky);g.stroke();g.lineCap='butt';
-  g.fillStyle='#7a2a22';g.beginPath();g.arc(kx,ky,L*.2,0,7);g.fill();
+  g.fillStyle='#7a2a22';g.beginPath();g.arc(kx,ky,L*kr,0,7);g.fill();
   g.fillStyle='#bdb8a4';g.font=`${Math.max(10,L*.2)}px monospace`;g.textAlign='center';g.fillText(label,x,y+L*.4);
 }
 function cabGeo(){const x0=W*.13,x1=W*.87,y0=H*.05,y1=H*.6,px=W*.06,py=y1+H*.04,R=Math.min(W*.052,H*.1),gy=py+R*1.4;
@@ -458,11 +463,11 @@ function cab(){
   g.drawImage(C.A,0,0,W,H);wiper(G);g.drawImage(C.B,0,0,W,H);
   const gv=[muEff/1.05*100,dv*3.6,5*(1-dbrk),dthr*800];G.gs.forEach((q,i)=>gaugeNeedle(q[0],q[1],q[2],gv[i],q[3]));
   g.textAlign='center';g.textBaseline='middle';
-  const L=Math.min(H*.12,W*.08),ly=H-L*.5;
-  /* on touch the levers and lamps are replaced by on-screen sliders and buttons */
-  if(!TOUCH){lever(W*.18,ly,thr,'THROTTLE',L);lever(W*.82,ly,brk,'BRAKE',L)}
+  const{L,ly}=lvGeo();
+  lever(W*.18,ly,thr,'THROTTLE',L,TOUCH?LSW:100,TOUCH?.27:.2);lever(W*.82,ly,brk,'BRAKE',L,TOUCH?LSW:100,TOUCH?.27:.2);
   clipb(W*.645,py+8,W*.11,H-py-16);
   const by=py+H*.07,rb=Math.min(L*.2,W*.016),f2=Math.max(9,L*.13);
+  /* on touch the lamps are replaced by on-screen buttons on the cab pillars */
   if(!TOUCH)[[.78,'SLIP','',slipping?'#e03020':'#4a1812',slipping],[.83,'SAND',Math.round(sand)+'% [E]',sanding?'#e8b923':'#7a5f10',sanding],[.88,'LIGHT','[L]',lamp?'#fff0a0':'#6e6a4a',lamp],[.925,'HORN','[H]',keys.KeyH?'#e0a020':'#8a5a12',keys.KeyH]].forEach(([xf,lb,sub,c,on])=>{
     const bx=W*xf;g.fillStyle=c;if(on){g.shadowColor=c;g.shadowBlur=14}g.beginPath();g.arc(bx,by,rb,0,7);g.fill();g.shadowBlur=0;
     g.fillStyle='#bdb8a4';g.font=`${f2}px monospace`;g.textAlign='center';g.textBaseline='alphabetic';g.fillText(lb,bx,by+rb+f2);g.fillText(sub,bx,by+rb+f2*2.1)});
@@ -506,7 +511,7 @@ function render(){
   if(dq==1)sheet('DEV MODE',['Turn on developer tools?','','Adds buttons for time of day, rain','and FPS display.','','SCORE WILL NOT BE COUNTED while dev','mode is on (this run and its high','score are ignored).','','Y / ENTER ... yes, turn on dev mode','N / ESC ..... no, cancel'],'The game is paused',.008);
   else if(dq==2)sheet('DEV MODE',['Dev mode is ON.','','Turn it off and hide the dev buttons?','','Note: this run stays uncounted.','','Y / ENTER ... yes, turn off','N / ESC ..... no, keep it on'],'The game is paused',.008);
   else if(!gateOK)0;
-  else if(st=='title')sheet('NIGHT LINE - TRAIN SHIFT',TOUCH?["No HUD. Read your gauges and the trackside.","","THROTTLE ... slider on the left","BRAKE ....... slider on the right (up = brake)","HORN ........ hold the HORN button","SAND ........ hold the SAND button","LIGHT ....... tap the LIGHT button","PAUSE ....... button at the top left","SOUND ....... button at the top right","","Sound the horn, release the brake, go."]:["No HUD. Read your gauges and the trackside.","","UP/DOWN or W/S ..... throttle","RIGHT/LEFT or D/A .. apply / release brake","SPACE .............. full brake (same as lever max)","H .................. horn (hold)","E .................. sand (hold)","L .................. headlight","R .................. rulebook (pauses)","M .................. mute sound","Q .................. end run","","Sound the horn, release the brake, go."],TOUCH?'Tap to start':'Click or press ENTER to start');
+  else if(st=='title')sheet('NIGHT LINE - TRAIN SHIFT',TOUCH?["No HUD. Read your gauges and the trackside.","","THROTTLE ... drag the left lever (right = power)","BRAKE ....... drag the right lever (right = brake)","HORN ........ hold the HORN button","SAND ........ hold the SAND button","LIGHT ....... tap the LIGHT button","PAUSE ....... button at the top left","SOUND ....... button at the top right","","Sound the horn, release the brake, go."]:["No HUD. Read your gauges and the trackside.","","UP/DOWN or W/S ..... throttle","RIGHT/LEFT or D/A .. apply / release brake","SPACE .............. full brake (same as lever max)","H .................. horn (hold)","E .................. sand (hold)","L .................. headlight","R .................. rulebook (pauses)","M .................. mute sound","Q .................. end run","","Sound the horn, release the brake, go."],TOUCH?'Tap to start':'Click or press ENTER to start');
   else if(st=='book')sheet('BULLETIN - ENDLESS LINE',["Brake is applied. The line never ends.","",...RULES],TOUCH?'Tap to begin your shift':'ENTER to begin your shift',.012);
   else if(st=='sum'){const c=calc();sheet('END OF RUN',[
     "Distance ............. "+c.km.toFixed(1)+" km",
@@ -569,7 +574,7 @@ function hud(){const show=!TOUCH&&st=='drive'&&!book&&!cq&&!dq,t=show?'Press Q t
 /* ---------- touch / phone mode ---------- */
 const $=id=>document.getElementById(id);
 const gateEl=$('gate'),gi=$('gi'),gt_=$('gt'),gsub=$('gsub'),gb=$('gb'),tcEl=$('tc'),pauseEl=$('pause'),pinfo=$('pinfo'),
-  thS=$('thS'),thK=$('thK'),brS=$('brS'),brK=$('brK'),bSlip=$('bSlip'),bSand=$('bSand'),bLamp=$('bLamp'),bHorn=$('bHorn'),bPause=$('bPause');
+  bSlip=$('bSlip'),bSand=$('bSand'),bLamp=$('bLamp'),bHorn=$('bHorn'),bPause=$('bPause');
 const FSel=()=>document.fullscreenElement||document.webkitFullscreenElement;
 const docEl=document.documentElement,fsReq=docEl.requestFullscreen||docEl.webkitRequestFullscreen,canFS=!!fsReq;
 let gateMode=-1;const cs={};
@@ -589,26 +594,29 @@ function syncTC(){
   if(cs.pl!==pl){cs.pl=pl;tcEl.style.display=pl?'block':'none'}
   if(cs.ps!==ps){cs.ps=ps;pauseEl.style.display=ps?'flex':'none';if(ps)pinfo.textContent=(s/1000).toFixed(1)+' km  |  fines $'+fines+'/'+MAXF}
   if(!pl){keys.KeyH=0;keys.KeyE=0;return}
-  if(cs.th!==thr){cs.th=thr;thK.style.top='calc((1 - '+thr+') * (100% - 44px))'}
-  if(cs.br!==brk){cs.br=brk;brK.style.top='calc((1 - '+brk+') * (100% - 44px))'}
   bSlip.classList.toggle('on',slipping);bSand.classList.toggle('on',sanding);bLamp.classList.toggle('on',lamp);bHorn.classList.toggle('on',!!keys.KeyH);
   const t='SAND\n'+Math.round(sand)+'%';if(cs.sd!==t){cs.sd=t;bSand.textContent=t}
-}
-function bindSl(el,set){
-  const f=e=>{const r=el.getBoundingClientRect();set(clamp(1-(e.clientY-r.top-22)/(r.height-44),0,1))};
-  el.addEventListener('pointerdown',e=>{if(!cs.pl)return;try{el.setPointerCapture(e.pointerId)}catch(_){}f(e);e.preventDefault()});
-  el.addEventListener('pointermove',e=>{if(cs.pl&&el.hasPointerCapture&&el.hasPointerCapture(e.pointerId))f(e)});
 }
 function holdBtn(el,code){
   el.addEventListener('pointerdown',e=>{if(!cs.pl)return;keys[code]=1;try{el.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault()});
   ['pointerup','pointercancel','lostpointercapture'].forEach(t=>el.addEventListener(t,()=>{keys[code]=0}));
 }
+/* lever dragging: press on a lever area, then slide the finger left/right (relative, so the lever never jumps) */
+const lvDrag={};
+const lvOK=()=>st=='drive'&&gateOK&&!book&&!cq&&!pz&&!dq;
+function lvHit(px,py){const G=lvGeo(),hw=G.L*1.6;if(py<G.ly-G.L*1.7)return null;if(Math.abs(px-G.tx)<hw)return't';if(Math.abs(px-G.bx)<hw)return'b';return null}
 if(TOUCH){
   docEl.classList.add('touch');
-  bindSl(thS,x=>{thr=x});bindSl(brS,x=>{brk=x});
   holdBtn(bHorn,'KeyH');holdBtn(bSand,'KeyE');
   bLamp.addEventListener('pointerdown',e=>{if(cs.pl)lamp=!lamp;e.preventDefault()});
   bPause.addEventListener('pointerdown',e=>{if(cs.pl)pz=true;e.preventDefault()});
+  cv.addEventListener('pointerdown',e=>{if(!lvOK())return;const r=cv.getBoundingClientRect(),k=lvHit(e.clientX-r.left,e.clientY-r.top);if(!k)return;
+    try{cv.setPointerCapture(e.pointerId)}catch(_){}
+    lvDrag[e.pointerId]={k,x0:e.clientX,v0:k=='t'?thr:brk};e.preventDefault()});
+  cv.addEventListener('pointermove',e=>{const d=lvDrag[e.pointerId];if(!d||!lvOK())return;
+    const G=lvGeo(),span=2*G.L*Math.sin(LSW/2*Math.PI/180),val=clamp(d.v0+(e.clientX-d.x0)/span,0,1);
+    if(d.k=='t')thr=val;else brk=val;e.preventDefault()});
+  ['pointerup','pointercancel'].forEach(t=>cv.addEventListener(t,e=>{delete lvDrag[e.pointerId]}));
   $('pRes').addEventListener('click',()=>{pz=false});
   $('pRul').addEventListener('click',()=>{book=true});
   $('pEnd').addEventListener('click',()=>{pz=false;finish()});
