@@ -13,6 +13,7 @@ canvas{display:block;width:100%;height:100%}
 #tools button.dev{display:none}
 body.dev #tools button.dev{display:inline-block}
 
+/* ---------- touch / phone mode (never shown on desktop) ---------- */
 html.touch,html.touch body{touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;overscroll-behavior:none}
 #gate,#pause,#tc{display:none}
 #gate{position:fixed;inset:0;z-index:99;background:#0b0d0cf5;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--fg);font:16px monospace;text-align:center;padding:20px}
@@ -23,6 +24,7 @@ html.touch,html.touch body{touch-action:none;user-select:none;-webkit-user-selec
 #gsub{font-size:13px;opacity:.75;max-width:420px}
 #gb{display:none;font:bold 18px monospace;padding:14px 28px;border-radius:12px;border:2px solid #e8b923;background:#2a2d28;color:#e8b923;cursor:pointer}
 #tc{position:fixed;inset:0;z-index:20;pointer-events:none}
+/* button columns sit on the cab pillars (outside the windscreen) so they never cover the view or the levers */
 #lcol,#rcol{position:fixed;width:max(64px,calc(13vw - 14px));display:flex;flex-direction:column;gap:6px}
 #lcol{left:calc(env(safe-area-inset-left,0px) + 6px);top:8px}
 #rcol{right:calc(env(safe-area-inset-right,0px) + 6px);bottom:8px}
@@ -52,6 +54,7 @@ html.touch,html.touch body{touch-action:none;user-select:none;-webkit-user-selec
 <script>
 const cv=document.getElementById('c');let g=cv.getContext('2d');
 let W,H;
+/* phone / tablet with touch as primary input */
 const TOUCH=(()=>{try{return matchMedia('(pointer:coarse)').matches&&navigator.maxTouchPoints>0}catch(e){return false}})();
 const QMAX=Math.min(devicePixelRatio||1,2);let QS=QMAX;
 function rs(){const d=QS;W=innerWidth;H=innerHeight;cv.width=Math.round(W*d);cv.height=Math.round(H*d);g.setTransform(d,0,0,d,0,0)}
@@ -61,20 +64,23 @@ const rnd=n=>{const x=Math.sin(n*127.1+311.7)*43758.5453;return x-Math.floor(x)}
 const mix=(a,b,t)=>'rgb('+Math.round(a[0]+(b[0]-a[0])*t)+','+Math.round(a[1]+(b[1]-a[1])*t)+','+Math.round(a[2]+(b[2]-a[2])*t)+')';
 const lr=(a,b,t)=>a.map((c,i)=>c+(b[i]-c)*t),rgb=a=>`rgb(${a.map(Math.round).join()})`;
 let FOG=[190,208,212];const mmss=t=>Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
+// ground colours per forest kind: 0 mixed, 1 dense pine, 2 autumn, 3 open farmland
 const KC=[[[111,138,90],[58,72,41]],[[74,104,70],[34,52,32]],[[146,128,66],[84,64,34]],[[164,152,84],[112,98,50]]];
 const TODS=[0,.5,.74,.92,.26],TODN=['Auto','Day','Sunset','Night','Sunrise'],RNN=['Auto','Off','Light','Heavy'];
 
+/* ---------- rules / tuning ---------- */
 const TOL=5;
 const FINE_RED=50, FINE_SPD=25;
-const MAXF=200;
-const SUNRISE=.26;
-const DAYLEN=480;
-const EXP_K=1.2;
-const EXP_SIGN=3;
-const EXP_STN=40;
-const EXP_SIG=5;
-const EXP_RED=30;
-const PTS_KM=100;
+const MAXF=200;            /* run ends when total citation fines go above this */
+const SUNRISE=.26;         /* every run starts at sunrise */
+const DAYLEN=480;          /* seconds of run time for one full day/night cycle (independent of speed) */
+/* expected-time model */
+const EXP_K=1.2;           /* allowance on time spent running at posted limits (accel/brake) */
+const EXP_SIGN=3;          /* seconds per speed sign */
+const EXP_STN=40;          /* seconds per station (stop + dwell + restart) */
+const EXP_SIG=5;           /* seconds per signal */
+const EXP_RED=30;          /* extra seconds per signal that was red */
+const PTS_KM=100;          /* points per km before time factor */
 const RULES=["1. AMBER board RED: home signal ahead is red. Slow.",
 "2. Home signal RED = STOP. YELLOW = proceed.",
 "3. Obey the last speed limit sign you passed.",
@@ -96,9 +102,10 @@ TOUCH?"12. Headlight (LIGHT) on in dusk, dark, heavy rain ($20).":"12. Headlight
 "distance, speed signs, stations and signals.",
 TOUCH?"Pause (top-left) > End run to finish.":"Press Q to end your run."];
 
+/* ---------- state ---------- */
 let st='title',book=false,day=1,clock=0,idle=0,s,v,thr,brk,limit,objs,dv,dthr,dbrk,over,grace,spdCd,fines,ncite,slip,cn=0,T=0,lastClick=0;
 let runT=0,nSign=0,nStn=0,nSig=0,nRed=0,endWhy='',devMode=false,devRun=false,dq=0,sumScore=0,newBest=false;
-let gateOK=!TOUCH,pz=false;
+let gateOK=!TOUCH,pz=false;   /* gateOK: phone is landscape + fullscreen; pz: touch pause menu */
 const keys={};
 let gv=0,gt=0,gd=0;
 let lamp=false,sand=100,sandT=0,slipping=false,slipT=0,mu=1.05,muEff=1.05,hk=99,hh=0,moving=false,darkT=0,sanding=false;
@@ -109,6 +116,7 @@ const rainAt=x=>RZ.reduce((m,z)=>Math.max(m,z.i*clamp((x-z.a)/350,0,1)*clamp((z.
 const gripAt=x=>{let f=1;KZ.forEach(z=>{if(z.k==2)f=Math.min(f,1-.38*clamp((x-z.a)/200,0,1)*clamp((z.b-x)/200,0,1))});GZ.forEach(z=>{f=Math.min(f,1-(1-z.m)*clamp((x-z.a)/200,0,1)*clamp((z.b-x)/200,0,1))});return f};
 const rainTarget=()=>(devMode&&rainMode)?[0,0,.45,1][rainMode]:rainAt(s);
 function env(dt){
+  /* time of day depends only on elapsed run time (clock), never on distance or speed */
   TOD=(devMode&&todMode)?TODS[todMode]:(SUNRISE+clock/DAYLEN)%1;
   EL=Math.sin(2*Math.PI*(TOD-.25));LV=clamp((EL+.12)/.35,0,1);WARM=clamp(1-Math.abs(EL)/.3,0,1);
   RAIN+=(rainTarget()-RAIN)*Math.min(1,dt*.8);
@@ -134,12 +142,13 @@ function extZones(to){
   while(VE<to){const a=1000+vi*4000+rnd(day*4+vi)*1500;RV.push({a,b:a+900+rnd(a)*900,sd:rnd(day*6+vi)<.5?-1:1});vi++;VE=1000+vi*4000}
 }
 const LIMS=[40,60,80,100,100,120,120,150,150,150];
+/* Signal pairs (distant + home) are planned per window of SIG_WIN stations: at least 1, at most SIG_MAX per window. */
 const SIG_WIN=3,SIG_MAX=2;
 const isExK=k=>k>0&&rnd(k*7.31+1*2.17+day)<.28;
 function sigPlan(w){
-  const A=Array.from({length:SIG_WIN},(_,i)=>SIG_WIN*w+i).filter(k=>k>0);
-  const n=Math.min(A.length,1+Math.floor(rnd(w*13.7+day*3.3)*SIG_MAX));
-  A.sort((x,y)=>(isExK(x)-isExK(y))||(rnd(x*5.1+day*1.9)-rnd(y*5.1+day*1.9)));
+  const A=Array.from({length:SIG_WIN},(_,i)=>SIG_WIN*w+i).filter(k=>k>0);      /* never in the very first section */
+  const n=Math.min(A.length,1+Math.floor(rnd(w*13.7+day*3.3)*SIG_MAX));        /* 1..SIG_MAX */
+  A.sort((x,y)=>(isExK(x)-isExK(y))||(rnd(x*5.1+day*1.9)-rnd(y*5.1+day*1.9))); /* prefer non-express sections */
   return A.slice(0,n)}
 function genSection(){
   objs=objs.filter(o=>o.s>s-1500);occ=occ.filter(r=>r[1]>s-3000);STN=STN.filter(o=>o.s>s-3500);STL=STL.filter(o=>o.s>s-3500);BR=BR.filter(o=>o.s+o.len>s-800);XG=XG.filter(o=>o.s>s-800);KZ=KZ.filter(z=>z.b>s-3000);RZ=RZ.filter(z=>z.b>s-3000);RV=RV.filter(z=>z.b>s-3000);while(CP.length>3&&CP[2][0]<s-2000)CP.shift();
@@ -151,16 +160,19 @@ function genSection(){
   add({t:'sign',s:q-900,lim:pick([100,120],4),fx:1});add({t:'sign',s:q-450,lim:pick([60,80],5),fx:1});
   add({t:'hs',s:q-420,cs:q-120,nm,hk:0,done:0});occ.push([q-1000,q+130]);
   if(k>0){const u=b+(ex?2900:1600)+Math.floor(R(6)*200),un=pickName(k*5.3+day*1.7+9),o=add({t:'ustn',s:u,name:un,we:0});STL.push(o);occ.push([u-450,u+130]);add({t:'hs',s:u-400,cs:u-100,nm:un,hk:0,done:0})}
+  /* planned signal pair: placed first so nothing else can crowd it out */
   if(sigPlan(Math.floor(k/SIG_WIN)).includes(k)){
     const cand=[];for(let p=b+400;p<=q-1560;p+=50)if(!bad(p-150,p+560))cand.push(p);
     if(!cand.length)for(let p=b+300;p<=q-1400;p+=50)if(!bad(p-120,p+520))cand.push(p);
     if(cand.length){const p=cand[Math.floor(R(30)*cand.length)],rd=R(31)<.5,h={t:'sig',s:p+500,red:rd,r0:rd,w:0,done:0};
       add({t:'sign',s:p-100,lim:80,fx:1});add({t:'dsig',s:p,ref:h});add(h);occ.push([p-150,p+560])}}
   if(ex)for(let x=b+1200;x<q-1250;x+=1300)if(!bad(x-100,x+100))add({t:'sign',s:x,lim:150,fx:1});
+  /* bridges and level crossings: at most one per 1500 m window, never overlapping other features */
   for(let i=0,x=b+600;x<q-1100;i++,x+=1500){const r=R(20+i),pos=x+Math.floor(R(40+i)*1100);
     if(r<.45){const len=70+Math.floor(R(60+i)*100);if(pos+len<q-1100&&!bad(pos-340,pos+len+80)){BR.push({s:pos,len});occ.push([pos-330,pos+len+70]);
       add({t:'sign',s:pos-250,lim:inEx(pos-250)?150:80,fx:1});add({t:'sign',s:pos+len+60,lim:inEx(pos)?150:100,fx:1});add({t:'hs',s:pos-300,cs:pos,nm:'bridge',hk:0,done:0})}}
     else if(r<.9&&pos<q-1100&&!bad(pos-340,pos+80)){XG.push({s:pos});occ.push([pos-330,pos+70]);add({t:'hs',s:pos-300,cs:pos,nm:'level crossing',hk:0,done:0})}}
+  /* random signs and signal pairs, min spacing enforced */
   for(let p=b+250;;){p+=260+rnd(p+day)*320;if(p>q-1250)break;if(inEx(p))continue;
     if(rnd(p*3+day)<.6){if(!bad(p-120,p+120))add({t:'sign',s:p,lim:LIMS[Math.floor(rnd(p*7+day)*LIMS.length)]})}}
   sec.sort((a,c)=>a.s-c.s);
@@ -170,6 +182,8 @@ function genSection(){
     CP.push([o.s,IDL])});
   GEN=q;extZones(q+3500);
 }
+/* Score: distance x time factor. Expected time is built from the course actually passed:
+   time at posted limits + per speed sign + per station + per signal (+ extra if it was red). */
 function calc(){
   const km=s/1000,exp=runT*EXP_K+nSign*EXP_SIGN+nStn*EXP_STN+nSig*EXP_SIG+nRed*EXP_RED;
   const tf=clock>1?clamp(exp/clock,.4,1.25):1;
@@ -186,21 +200,25 @@ function update(dt){
   if(K.ArrowRight||K.KeyD)brk+=.6*dt;if(K.ArrowLeft||K.KeyA)brk-=.8*dt;
   thr=clamp(thr,0,1);brk=clamp(brk,0,1);
   const be=K.Space?1:brk,te=thr;
+  /* adhesion, sanding, slip */
   sanding=!!K.KeyE&&sand>0;
   if(sanding){sand=Math.max(0,sand-2*dt);sandT=7}else sandT=Math.max(0,sandT-dt);
+  /* random wheel-slip event: lamp lights, hold sand 1 s within 10 s or be cited */
   if(!slipping){if(v>1){slipNext-=dt;if(slipNext<=0){slipping=true;slipT=0;sandHold=0}}}
   else{slipT+=dt;if(sanding){sandHold+=dt;if(sandHold>=1){slipping=false;slipNext=90+Math.random()*150}}
     else if(slipT>10){if(sand>0)cite('Wheel slip: sand not applied',30);slipping=false;slipNext=90+Math.random()*150}}
   muEff=slipping?.35:1.05;
+  /* headlight rule */
   const ll=LV*(1-.4*RAIN);
   if(ll<.5&&!lamp&&v>2){darkT+=dt;if(darkT>6){cite('Headlight off in poor light',20);darkT=-25}}
   else darkT=darkT<0?Math.min(0,darkT+dt):0;
+  /* horn */
   if(K.KeyH){hh+=dt;hk=0}else{hh=0;hk+=dt}
   const hornGood=hh>.4;
   if(v<.2)moving=false;else if(!moving&&v>=.5){moving=true;if(hk>12)cite('Started moving without sounding horn',20)}
   const acc=te*1.3*Math.max(0,1-(v/48)**2)*(slipping?.5:1),dec=be*1.3*(slipping?.8:1)+.02+v*v*.00004;
   v=Math.max(0,v+(acc-dec)*dt);s+=v*dt;
-  runT+=v*dt/(limit/3.6);
+  runT+=v*dt/(limit/3.6);   /* time it would take at the posted limit */
   const k=Math.min(1,dt*4);dv+=(v-dv)*k;dthr+=((te+(slipping?.25:0))-dthr)*k;dbrk+=(be-dbrk)*k;
   const kmh=v*3.6;
   let allow=limit+TOL;
@@ -219,11 +237,13 @@ function update(dt){
       if(!o.done&&s>=o.s){o.done=1;nSig++;if(o.r0)nRed++;if(o.red){cite('Signal passed at danger',FINE_RED);o.red=false}}}}
   if(v<.3&&s>20&&!objs.some(o=>{const d=o.s-s;return(o.t=='sig'&&(o.red||o.w>0)&&d>-5&&d<160)||((o.t=='stn'||o.t=='ustn')&&d>-60&&d<160)})){idle+=dt;if(idle>8){idle=-30;cite('Stopped on the line without cause',30)}}else idle=0;
   if(slip){slip.t+=dt;if(slip.t>8)slip=null}
+  /* too many citations: run ends */
   if(fines>MAXF){endWhy='Fines over $'+MAXF+'. Licence suspended.';finish()}
 }
 let sv=0,cq=false;
 const rate=n=>n>=6000?'S':n>=4000?'A':n>=2500?'B':n>=1500?'C':n>=500?'D':'F';
 
+/* ---------- audio ---------- */
 let AC,master,eng,eng2,lfo,windG,engG,hissG,hornG,rainG,sandG,nbuf,muted=false;
 function initAudio(){
   if(AC){AC.resume();return}
@@ -243,6 +263,7 @@ function initAudio(){
   [311,392,466].forEach(f=>{const o=AC.createOscillator();o.type='sawtooth';o.frequency.value=f;const l=AC.createBiquadFilter();l.type='lowpass';l.frequency.value=1400;o.connect(l);l.connect(hornG);o.start()});
 }
 function toggleMute(){muted=!muted;if(master)master.gain.value=muted?0:.9;document.getElementById('mute').textContent=muted?'🔇 Sound off (M)':'🔊 Sound on (M)'}
+/* ---------- dev mode (Shift+O, desktop) ---------- */
 let fpsOn=true;
 const labTod=()=>{document.getElementById('tod').textContent='🕒 Time: '+TODN[todMode]+' (N)'};
 const labRain=()=>{document.getElementById('rn').textContent='🌧 Rain: '+RNN[rainMode]+' (P)'};
@@ -251,7 +272,7 @@ function cycleTod(){if(!devMode)return;todMode=(todMode+1)%5;labTod()}
 function toggleFps(){if(!devMode)return;fpsOn=!fpsOn;fpsEl.style.display=fpsOn?'block':'none';labFps()}
 function cycleRain(){if(!devMode)return;rainMode=(rainMode+1)%4;labRain()}
 function setDev(on){devMode=on;document.body.classList.toggle('dev',on);
-  if(on)devRun=true;
+  if(on)devRun=true;                       /* this run no longer counts for score */
   else{todMode=0;rainMode=0;labTod();labRain()}
   fpsEl.style.display=(on&&fpsOn)?'block':'none'}
 function tick(dl=0){const t=AC.currentTime+dl,b=AC.createBufferSource();b.buffer=nbuf;const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=800+Math.random()*500;
@@ -269,6 +290,7 @@ function audio(){
   const c=Math.floor(s/9);if(dr&&c!=lastClick){lastClick=c;if(v>1){tick();tick(Math.min(.25,2.5/v))}}
 }
 
+/* ---------- drawing: sky ---------- */
 const ZS=[];for(let z=1.8;z<900;z*=1.05)ZS.push(z);
 const gg=x=>40*Math.sin(x/600)+15*Math.sin(x/190), gp=x=>40/600*Math.cos(x/600)+15/190*Math.cos(x/190);
 function glow(x,y,r,c,z,i){const lim=600-250*RAIN,a=clamp(1-(z-lim+350)/350,0,1);if(a<=0)return;g.save();g.globalAlpha=a;g.beginPath();g.arc(x,y,r,0,7);g.fillStyle=c;if(a>.3){g.shadowColor=c;g.shadowBlur=r*3}g.fill();g.restore();LT.push([x,y,r,c,a,i])}
@@ -283,8 +305,11 @@ function sky(hor,F){
   g.fillStyle=`rgba(${cl},${.5+RAIN*.35})`;for(let i=0;i<nc;i++){const w=W*(.07+rnd(i+5)*.1),x=(rnd(i+3)*W*1.4+T*(2+i))%(W*1.4)-W*.2,y=hor*(.12+rnd(i+9)*.5);for(let k=0;k<4;k++){g.beginPath();g.ellipse(x+k*w*.3,y+(k%2)*3,w*.35,w*.1,0,0,7);g.fill()}}
   for(let L=0;L<2;L++){g.fillStyle=mix(L?[96,128,120]:[140,170,176],FOG,.2);g.beginPath();g.moveTo(-10,hor+1);for(let x=-10;x<=W+10;x+=16)g.lineTo(x,hor-H*(.03+.015*L)*(1+Math.sin((x-gp(s)*F*.5)/(160+L*90)+L*2)*.6)-H*.01*Math.sin(x/37+L));g.lineTo(W+10,hor+1);g.fill()}
 }
+/* ---------- drawing: world ---------- */
 function world(){
   const hor=H*.36,F=H*.65,CH=2.6,cx=W/2,off=z=>gg(s+z)-gg(s)-gp(s)*z;LT=[];TR=[];
+  /* trackside boards are drawn at true perspective scale: tiny when far, text only when it is big enough to read.
+     SZ/SZB enlarge the physical size a little on phones so they stay readable at a useful distance. */
   const SZ=TOUCH?1.8:1,SZB=TOUCH?1.3:1,MINF=TOUCH?4.5:4;
   sky(hor,F);
   let gr=g.createLinearGradient(0,hor,0,H);gr.addColorStop(0,rgb(GC));gr.addColorStop(1,rgb(GB));g.fillStyle=gr;g.fillRect(-10,hor,W+20,H);
@@ -292,8 +317,10 @@ function world(){
   const zs=ZS;
   const P=(z,l)=>[cx+(off(z)+l)*F/z,hor+CH*F/z];
   const q=(z,l,h)=>{const p=P(z,l);return[p[0],p[1]-h*F/z]},poly=(pts,c)=>{g.fillStyle=c;g.beginPath();pts.forEach((p,i)=>i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1]));g.fill()};
+  /* rivers beside the line */
   RV.forEach(r=>{const a=r.a-s,b=r.b-s;if(b<2||a>900)return;const zz=zs.filter(z=>z>=a&&z<=b);if(zz.length<2)return;
     g.fillStyle=mix([66,116,152],FOG,.12);g.beginPath();zz.forEach((z,i)=>{const p=P(z,r.sd*11);i?g.lineTo(p[0],p[1]):g.moveTo(p[0],p[1])});for(let i=zz.length-1;i>=0;i--){const p=P(zz[i],r.sd*34);g.lineTo(p[0],p[1])}g.fill()});
+  /* rivers under bridges */
   BR.forEach(o=>{const za=Math.max(1.8,o.s-7-s),zb=Math.min(900,o.s+o.len+7-s);if(zb<=za)return;
     poly([P(za,-90),P(zb,-90),P(zb,90),P(za,90)],mix([96,84,62],FOG,.1));
     const wa=Math.max(1.8,o.s-s),wb=Math.min(900,o.s+o.len-s);if(wb>wa)poly([P(wa,-90),P(wb,-90),P(wb,90),P(wa,90)],mix([62,112,150],FOG,.1))});
@@ -303,6 +330,7 @@ function world(){
   g.strokeStyle='#3b3029';
   for(let d=Math.ceil((s+1.8)/.75)*.75;d<s+90;d+=.75){const z=d-s;if(z>22){const ix=Math.round(d/.75);if(z>45?ix%4:ix%2)continue}const a=P(z,-1.35),b=P(z,1.35);g.lineWidth=Math.max(1,.22*F/z);g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke()}
   GZ.forEach(z0=>{const za=Math.max(1.8,z0.a-s),zb=Math.min(900,z0.b-s);if(zb<=za)return;poly([P(za,-2.1),P(zb,-2.1),P(zb,2.1),P(za,2.1)],'rgba(30,22,14,.35)')});
+  /* level crossing roads */
   XG.forEach(o=>{const za=Math.max(1.8,o.s-3.2-s),zb=Math.min(900,o.s+3.2-s);if(zb<=za)return;
     poly([P(za,-80),P(zb,-80),P(zb,80),P(za,80)],'#4b4d50');
     const zc=o.s-s;if(zc>1.8){g.strokeStyle='rgba(230,220,170,.7)';g.lineWidth=Math.max(1,.15*F/zc);g.setLineDash([2.5*F/zc,2.5*F/zc]);const a=P(zc,-80),b=P(zc,80);g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke();g.setLineDash([])}});
@@ -310,6 +338,7 @@ function world(){
   [-.72,.72].forEach(l=>{let far=false;for(let i=1;i<zs.length;i++){const w=Math.max(1,.09*F/zs[i-1]);if(w<=1){if(!far){far=true;g.lineWidth=1;g.beginPath();const a=P(zs[i-1],l);g.moveTo(a[0],a[1])}const b=P(zs[i],l);g.lineTo(b[0],b[1])}else{const a=P(zs[i-1],l),b=P(zs[i],l);g.lineWidth=w;g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(b[0],b[1]);g.stroke()}}if(far)g.stroke()});
   STL.forEach(o=>{const a=Math.max(1.8,o.s-100-s),b=o.s+50-s;if(b<2||a>900)return;
     poly([q(a,2.2,0),q(b,2.2,0),q(b,2.2,1),q(a,2.2,1)],'#8b877c');poly([q(a,2.2,1),q(b,2.2,1),q(b,5.4,1),q(a,5.4,1)],'#b4afa2');poly([q(a,2.2,1),q(b,2.2,1),q(b,2.45,1),q(a,2.45,1)],'#e8c84a')});
+  /* bridge girders and railings */
   BR.forEach(o=>{const a=Math.max(1.8,o.s-s),b=Math.min(700,o.s+o.len-s);if(b<2||a>=b)return;
     [-2.5,2.5].forEach(l=>{poly([q(a,l,1),q(b,l,1),q(b,l,0),q(a,l,0)],'#6d737a');poly([q(a,l,1.45),q(b,l,1.45),q(b,l,1.3),q(a,l,1.3)],'#9aa0a6');
       g.strokeStyle='#9aa0a6';for(let d=Math.ceil((s+a)/6)*6;d<s+b;d+=6){const z=d-s;if(z<1.8)continue;const p0=q(z,l,1),p1=q(z,l,1.45);g.lineWidth=Math.max(1,.1*F/z);g.beginPath();g.moveTo(p0[0],p0[1]);g.lineTo(p1[0],p1[1]);g.stroke()}})});
@@ -381,6 +410,7 @@ function clipb(x,y,w,h){const fs=clamp(W*.0085,8,13),L=STN,nx=L.find(o=>!o.state
   g.fillStyle='#1b1a16';g.textAlign='left';g.textBaseline='top';g.font=`bold ${fs}px "Courier New",monospace`;g.fillText('TIMETABLE '+served,x+8,y+18);
   L.slice(a0,a0+ns).forEach((o,i)=>{g.font=`${fs}px "Courier New",monospace`;g.fillStyle=o.state==2?'#b3261e':o==nx?'#0b4f9a':o.state?'#2a6b2a':'#1b1a16';g.fillText((o.state==1?'[x] ':o.state==2?'[!] ':o==nx?'[>] ':'[ ] ')+o.name,x+8,y+22+fs*1.6*(i+1))});
   g.font=`${fs}px "Courier New",monospace`;g.fillStyle='#1b1a16';g.fillText('NOW '+mmss(clock),x+8,y+h-fs*4.9);g.fillStyle=fines>MAXF*.75?'#b3261e':'#1b1a16';g.fillText('FINES $'+fines+'/'+MAXF,x+8,y+h-fs*3)}
+/* ---------- drawing: lighting, rain ---------- */
 function night(){
   const dk=.74*(1-LV)**1.8+RAIN*.12*LV;
   if(dk>.01){if(lamp&&LV<.95){const rg=g.createRadialGradient(W/2,H*.4,H*.03,W/2,H*.4,H*.62);rg.addColorStop(0,`rgba(5,8,20,${dk*.06})`);rg.addColorStop(.5,`rgba(5,8,20,${dk*.5})`);rg.addColorStop(1,`rgba(5,8,20,${dk})`);g.fillStyle=rg}else g.fillStyle=`rgba(5,8,20,${dk})`;g.fillRect(0,0,W,H*.62)}
@@ -394,6 +424,7 @@ function night(){
 }
 function rainFX(){if(RAIN<.02)return;const n=Math.floor(RAIN*240),sl=.1+v*.004,hh_=H*.62;g.strokeStyle=`rgba(210,225,240,${.18+.12*RAIN})`;g.lineWidth=1;g.beginPath();
   for(let i=0;i<n;i++){const sp=.8+rnd(i*7.7)*.5,y=(rnd(i*3.3)*hh_+T*700*sp)%hh_,x=rnd(i*1.9)*(W+200)-100-y*sl,len=10+rnd(i*5.1)*18;g.moveTo(x,y);g.lineTo(x-len*sl,y+len)}g.stroke()}
+/* ---------- drawing: cab ---------- */
 function gaugeFace(x,y,r,max,maj,minor,unit){
   g.fillStyle='#0b0c0b';g.beginPath();g.arc(x,y,r*1.12,0,7);g.fill();g.strokeStyle='#8a8a80';g.lineWidth=3;g.stroke();
   g.fillStyle='#14171a';g.beginPath();g.arc(x,y,r,0,7);g.fill();
@@ -406,7 +437,8 @@ function gaugeFace(x,y,r,max,maj,minor,unit){
 }
 function gaugeNeedle(x,y,r,val,max){const a=(135+270*clamp(val/max,0,1))*Math.PI/180;g.strokeStyle='#ff9d3a';g.lineWidth=3;g.beginPath();g.moveTo(x-Math.cos(a)*r*.15,y-Math.sin(a)*r*.15);g.lineTo(x+Math.cos(a)*r*.85,y+Math.sin(a)*r*.85);g.stroke();
   g.fillStyle='#222';g.beginPath();g.arc(x,y,r*.07,0,7);g.fill()}
-const LSW=120;
+/* levers: same look on desktop and touch; on touch they are a bit bigger, swing wider and are dragged with a finger */
+const LSW=120;   /* touch swing, degrees */
 function lvGeo(){const L=Math.min(H*.12,W*.08)*(TOUCH?1.35:1);return{L,ly:H-L*.5,tx:W*.18,bx:W*.82}}
 function lever(x,y,val,label,L,SW=100,kr=.2){
   g.fillStyle='#2b2d29';g.beginPath();g.ellipse(x,y,L*.45,L*.18,0,0,7);g.fill();
@@ -448,12 +480,15 @@ function cab(){
   lever(W*.18,ly,thr,'THROTTLE',L,TOUCH?LSW:100,TOUCH?.27:.2);lever(W*.82,ly,brk,'BRAKE',L,TOUCH?LSW:100,TOUCH?.27:.2);
   clipb(W*.645,py+8,W*.11,H-py-16);
   const by=py+H*.07,rb=Math.min(L*.2,W*.016),f2=Math.max(9,L*.13);
+  /* on touch the lamps are replaced by on-screen buttons on the cab pillars */
   if(!TOUCH)[[.78,'SLIP','',slipping?'#e03020':'#4a1812',slipping],[.83,'SAND',Math.round(sand)+'% [E]',sanding?'#e8b923':'#7a5f10',sanding],[.88,'LIGHT','[L]',lamp?'#fff0a0':'#6e6a4a',lamp],[.925,'HORN','[H]',keys.KeyH?'#e0a020':'#8a5a12',keys.KeyH]].forEach(([xf,lb,sub,c,on])=>{
     const bx=W*xf;g.fillStyle=c;if(on){g.shadowColor=c;g.shadowBlur=14}g.beginPath();g.arc(bx,by,rb,0,7);g.fill();g.shadowBlur=0;
     g.fillStyle='#bdb8a4';g.font=`${f2}px monospace`;g.textAlign='center';g.textBaseline='alphabetic';g.fillText(lb,bx,by+rb+f2);g.fillText(sub,bx,by+rb+f2*2.1)});
 }
 
+/* ---------- drawing: papers ---------- */
 function sheet(title,lines,foot,rot=-.01){
+  /* long sheets use two columns on touch screens (desktop path is unchanged) */
   const two=TOUCH&&lines.length>12;let half=lines.length;
   if(two){half=Math.ceil(lines.length/2);while(lines[half]&&lines[half][0]==' ')half++}
   const rows=two?Math.max(half,lines.length-half):lines.length,ml=Math.max(...lines.map(t=>t.length)),
@@ -508,6 +543,7 @@ function render(){
   else if(cq)sheet('END RUN?',['End your run and see your score?','','Distance so far: '+(s/1000).toFixed(1)+' km','','Y / ENTER ... yes, end run','N / ESC ..... no, keep driving'],'The game is paused',.01);
 }
 
+/* ---------- input / loop ---------- */
 function advance(){
   initAudio();
   if(st=='title'){st='book'}
@@ -517,6 +553,7 @@ function advance(){
 addEventListener('keydown',e=>{
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','Tab'].includes(e.code))e.preventDefault();
   if(e.repeat&&e.code!='KeyH'){keys[e.code]=1;return}
+  /* dev-mode confirmation swallows all keys */
   if(dq){
     if(e.code=='KeyY'||e.code=='Enter'){setDev(dq==1);dq=0}
     else if(e.code=='KeyN'||e.code=='Escape')dq=0;
@@ -535,24 +572,26 @@ addEventListener('keydown',e=>{
 addEventListener('keyup',e=>keys[e.code]=0);
 addEventListener('pointerdown',e=>{const id=e.target.id;
   if(dq)return;
-  if(e.target.closest&&e.target.closest('#gate,#tc,#pause'))return;
+  if(e.target.closest&&e.target.closest('#gate,#tc,#pause'))return;   /* touch UI handles its own taps */
   if(id=='mute'){initAudio();toggleMute();return}
   if(id=='tod'){cycleTod();return}
   if(id=='rn'){cycleRain();return}
   if(id=='fp'){toggleFps();return}
-  if(TOUCH&&book&&st=='drive'){book=false;return}
+  if(TOUCH&&book&&st=='drive'){book=false;return}   /* tap closes the rulebook (opened from pause menu) */
   if(st!='drive')advance()});
 const fpsEl=document.getElementById('fps'),hintEl=document.getElementById('hint'),pf={f:0,t:0,w:0,s:0,lo:0,ok:0,up:0,tryUp:-1e9,chk:0,base:0,old:0,noDown:0};
 let hintTxt=null;
 function hud(){const show=!TOUCH&&st=='drive'&&!book&&!cq&&!dq,t=show?'Press Q to end run'+(devRun?'  |  DEV MODE: score off':''):'';
   if(t!==hintTxt){hintTxt=t;hintEl.textContent=t;hintEl.style.display=show?'block':'none'}}
 
+/* ---------- touch / phone mode ---------- */
 const $=id=>document.getElementById(id);
 const gateEl=$('gate'),gi=$('gi'),gt_=$('gt'),gsub=$('gsub'),gb=$('gb'),tcEl=$('tc'),pauseEl=$('pause'),pinfo=$('pinfo'),
   bSlip=$('bSlip'),bSand=$('bSand'),bLamp=$('bLamp'),bHorn=$('bHorn'),bPause=$('bPause');
 const FSel=()=>document.fullscreenElement||document.webkitFullscreenElement;
 const docEl=document.documentElement,fsReq=docEl.requestFullscreen||docEl.webkitRequestFullscreen,canFS=!!fsReq;
 let gateMode=-1;const cs={};
+/* gate: must be landscape (and fullscreen where the browser supports it). Losing either pauses the run. */
 function checkGate(){
   const land=innerWidth>innerHeight,fs=!!FSel(),mode=!land?1:(canFS&&!fs)?2:0,ok=mode==0;
   if(!ok&&gateOK&&st=='drive'){pz=true;book=false;cq=false;dq=0}
@@ -575,6 +614,7 @@ function holdBtn(el,code){
   el.addEventListener('pointerdown',e=>{if(!cs.pl)return;keys[code]=1;try{el.setPointerCapture(e.pointerId)}catch(_){}e.preventDefault()});
   ['pointerup','pointercancel','lostpointercapture'].forEach(t=>el.addEventListener(t,()=>{keys[code]=0}));
 }
+/* lever dragging: press on a lever area, then slide the finger left/right (relative, so the lever never jumps) */
 const lvDrag={};
 const lvOK=()=>st=='drive'&&gateOK&&!book&&!cq&&!pz&&!dq;
 function lvHit(px,py){const G=lvGeo(),hw=G.L*1.6;if(py<G.ly-G.L*1.7)return null;if(Math.abs(px-G.tx)<hw)return't';if(Math.abs(px-G.bx)<hw)return'b';return null}
