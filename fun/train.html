@@ -6,13 +6,17 @@
 :root{--bg:#0b0d0c;--fg:#e8e2d0;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html,body{margin:0;height:100%;background:var(--bg);overflow:hidden}
 canvas{display:block;width:100%;height:100%}
-#fps{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:8px;background:#222a;color:#9f9;border:1px solid #444;border-radius:6px;padding:4px 8px;font:12px monospace;pointer-events:none}
+#fps{display:none;position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:8px;background:#222a;color:#9f9;border:1px solid #444;border-radius:6px;padding:4px 8px;font:12px monospace;pointer-events:none}
+#hint{display:none;position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);left:50%;transform:translateX(-50%);background:#222a;color:var(--fg);border:1px solid #444;border-radius:6px;padding:4px 10px;font:12px monospace;pointer-events:none;white-space:nowrap}
 #tools{position:fixed;top:calc(env(safe-area-inset-top,0px) + 8px);right:8px;display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;max-width:92vw}
 #tools button{background:#222a;color:var(--fg);border:1px solid #666;border-radius:6px;padding:6px 10px;font:13px monospace;cursor:pointer}
+#tools button.dev{display:none}
+body.dev #tools button.dev{display:inline-block}
 </style></head><body>
 <canvas id="c"></canvas>
 <div id="fps">FPS --</div>
-<div id="tools"><button id="tod">🕒 Time: Auto (N)</button><button id="rn">🌧 Rain: Auto (P)</button><button id="fp">📊 FPS: On (F)</button><button id="mute">🔊 Sound on (M)</button></div>
+<div id="hint"></div>
+<div id="tools"><button id="tod" class="dev">🕒 Time: Auto (N)</button><button id="rn" class="dev">🌧 Rain: Auto (P)</button><button id="fp" class="dev">📊 FPS: On (F)</button><button id="mute">🔊 Sound on (M)</button></div>
 <script>
 const cv=document.getElementById('c');let g=cv.getContext('2d');
 let W,H;
@@ -28,101 +32,124 @@ let FOG=[190,208,212];const mmss=t=>Math.floor(t/60)+':'+String(Math.floor(t%60)
 const KC=[[[111,138,90],[58,72,41]],[[74,104,70],[34,52,32]],[[146,128,66],[84,64,34]],[[164,152,84],[112,98,50]]];
 const TODS=[0,.5,.74,.92,.26],TODN=['Auto','Day','Sunset','Night','Sunrise'],RNN=['Auto','Off','Light','Heavy'];
 
-/* ---------- rules ---------- */
+/* ---------- rules / tuning ---------- */
 const TOL=5;
-const LEN=51600, WAGE=400, LIVING=150, FINE_RED=50, FINE_SPD=25;
+const FINE_RED=50, FINE_SPD=25;
+const MAXF=200;            /* run ends when total citation fines go above this */
+const SUNRISE=.26;         /* every run starts at sunrise */
+const DAYLEN=480;          /* seconds of run time for one full day/night cycle (independent of speed) */
+/* expected-time model */
+const EXP_K=1.2;           /* allowance on time spent running at posted limits (accel/brake) */
+const EXP_SIGN=3;          /* seconds per speed sign */
+const EXP_STN=40;          /* seconds per station (stop + dwell + restart) */
+const EXP_SIG=5;           /* seconds per signal */
+const EXP_RED=30;          /* extra seconds per signal that was red */
+const PTS_KM=100;          /* points per km before time factor */
 const RULES=["1. AMBER board RED: home signal ahead is red. Slow.",
 "2. Home signal RED = STOP. YELLOW = proceed.",
 "3. Obey the last speed limit sign you passed.",
 `4. Over the limit by ${TOL}+ km/h = citation ($${FINE_SPD}).`,
 `5. Passing a red signal = citation ($${FINE_RED}).`,
-"6. STOP board: stop, wait for YELLOW (+$20).",
+"6. STOP board: stop, wait for YELLOW.",
 "7. Overrun / stopping short of platform ($30/$20).",
 "8. No stops on the line or at unlisted stations.",
-"9. Finish by DUE time on the clipboard or $60 fine.",
-"10. Blue W board: sound horn (hold H) before the",
+"9. Blue W board: sound horn (hold H) before the",
 "    crossing / bridge / station ahead ($25).",
-"11. Sound horn before every start from rest ($20).",
-"12. SLIP lamp on: hold E (sand) 1 s within 10 s ($30).",
-"13. Headlight (L) on in dusk, dark, heavy rain ($20).",
+"10. Sound horn before every start from rest ($20).",
+"11. SLIP lamp on: hold E (sand) 1 s within 10 s ($30).",
+"12. Headlight (L) on in dusk, dark, heavy rain ($20).",
 "Wheel slip strikes at random. Keep sand in stock.",
-`Pay $${WAGE}, +$20 per station. Living costs $${LIVING}.`,
-"Your savings at the end of the run are your score."];
+`Fines over $${MAXF} end your run (licence suspended).`,
+"Fines are NOT part of the score.",
+"Score = distance x time factor, where factor =",
+"expected time / your time. Expected time comes from",
+"distance, speed signs, stations and signals.",
+"Press Q to end your run."];
 
 /* ---------- state ---------- */
-let st='title',book=false,day=1,late=0,ideal=0,clock=0,idle=0,s,v,thr,brk,limit,objs,dv,dthr,dbrk,over,grace,spdCd,fines,ncite,slip,cn=0,T=0,lastClick=0;
+let st='title',book=false,day=1,clock=0,idle=0,s,v,thr,brk,limit,objs,dv,dthr,dbrk,over,grace,spdCd,fines,ncite,slip,cn=0,T=0,lastClick=0;
+let runT=0,nSign=0,nStn=0,nSig=0,nRed=0,endWhy='',devMode=false,devRun=false,dq=0,sumScore=0,newBest=false;
 const keys={};
 let gv=0,gt=0,gd=0;
 let lamp=false,sand=100,sandT=0,slipping=false,slipT=0,mu=1.05,muEff=1.05,hk=99,hh=0,moving=false,darkT=0,sanding=false;
-let TOD=.3,EL=1,LV=1,WARM=0,RAIN=0,U0=.26,KZ=[],RZ=[],RV=[],XG=[],BR=[],GC=[111,138,90],GB=[58,72,41],LT=[],TR=[];
-let STL=[],STN=[],sandHold=0,slipNext=90,dem=0,wph=0,GZ=[],todMode=0,rainMode=0,NSTN=12,best=null;
+let TOD=SUNRISE,EL=1,LV=1,WARM=0,RAIN=0,KZ=[],RZ=[],RV=[],XG=[],BR=[],GC=[111,138,90],GB=[58,72,41],LT=[],TR=[];
+let STL=[],STN=[],sandHold=0,slipNext=90,dem=0,wph=0,GZ=[],todMode=0,rainMode=0,NSTN=12,best=(()=>{try{const x=localStorage.getItem('nightline_best_v2');return x===null?null:+x}catch(e){return null}})();
 const kindAt=x=>(KZ.find(z=>x>=z.a&&x<z.b)||KZ[KZ.length-1]).k;
 const rainAt=x=>RZ.reduce((m,z)=>Math.max(m,z.i*clamp((x-z.a)/350,0,1)*clamp((z.b-x)/350,0,1)),0);
 const gripAt=x=>{let f=1;KZ.forEach(z=>{if(z.k==2)f=Math.min(f,1-.38*clamp((x-z.a)/200,0,1)*clamp((z.b-x)/200,0,1))});GZ.forEach(z=>{f=Math.min(f,1-(1-z.m)*clamp((x-z.a)/200,0,1)*clamp((z.b-x)/200,0,1))});return f};
-const rainTarget=()=>rainMode?[0,0,.45,1][rainMode]:rainAt(s);
+const rainTarget=()=>(devMode&&rainMode)?[0,0,.45,1][rainMode]:rainAt(s);
 function env(dt){
-  TOD=todMode?TODS[todMode]:(U0+s/LEN*4)%1;EL=Math.sin(2*Math.PI*(TOD-.25));LV=clamp((EL+.12)/.35,0,1);WARM=clamp(1-Math.abs(EL)/.3,0,1);
+  /* time of day depends only on elapsed run time (clock), never on distance or speed */
+  TOD=(devMode&&todMode)?TODS[todMode]:(SUNRISE+clock/DAYLEN)%1;
+  EL=Math.sin(2*Math.PI*(TOD-.25));LV=clamp((EL+.12)/.35,0,1);WARM=clamp(1-Math.abs(EL)/.3,0,1);
   RAIN+=(rainTarget()-RAIN)*Math.min(1,dt*.8);
   let f=lr([190,208,212],[138,148,154],RAIN*.8);f=lr(f,[22,28,46],1-LV);FOG=lr(f,[232,172,132],WARM*.4*LV);
   const kt=KC[kindAt(s+150)],k=Math.min(1,dt*.8);GC=lr(GC,kt[0],k);GB=lr(GB,kt[1],k);
 }
-function newShift(){
+function newShift(){day=Math.random()*1000;
   s=0;v=0;thr=0;brk=1;idle=0;limit=40;dv=0;dthr=0;dbrk=1;over=0;grace=0;spdCd=0;fines=0;ncite=0;slip=null;
+  clock=0;runT=0;nSign=0;nStn=0;nSig=0;nRed=0;endWhy='';devRun=devMode;newBest=false;
   lamp=false;sand=100;sandT=0;slipping=false;slipT=0;slipNext=60+Math.random()*120;sandHold=0;mu=1.05;muEff=1.05;hk=99;hh=0;moving=false;darkT=0;sanding=false;
-  U0=.24+rnd(day*3.7)*.06;
-  const NM=["Pine Hollow","Marsh Cross","Birch Lane","Ironbridge","Cold Spring","Ashford Halt","Millbrook","Raven Gap","Elm Junction","Stonehaven","Wren Valley","Foxglove","Kettle Moor","Alder Ford","Harrow Hill","Dunmere","Saltmarsh","Larkspur","Thorn Cross","Wick Green","Brindle","Copper Dale","Hazel Reach","Oakmont","Swan Lake","Fenwick","Mossgate","Redwater","Cinder Row","Ivy Bridge","Greywell","Linden Park","Nettle Fold","Ashgrove","Briar Cliff","Tansy End","Quarry Bank","Willow Run","Sedge Mere","Holloway"];
-  const SP=[],UP=[],i0=Math.floor(rnd(day*13)*40),LIMS=[40,60,80,100,100,120,120,150,150,150];
-  const EXK=[0,3,6,9];  // express stretches: the gap after these stations is longer, all 150, no low signs / red signals
-  for(let k=0;k<12;k++)SP.push(2000+k*3400+2400*EXK.filter(e=>e<k).length+Math.floor(rnd(k*3.1+day)*400));
-  for(let k=0;k<11;k++)UP.push(SP[k]+(EXK.includes(k)?2900:1600)+Math.floor(rnd(k*5.3+day)*200));
-  const EX=EXK.map(k=>[SP[k]+100,SP[k+1]-950]),inEx=x=>EX.some(r=>x>r[0]&&x<r[1]);
-  NSTN=SP.length;
-  objs=[{t:'sign',s:30,lim:40,fx:1}];
-  SP.forEach((q,k)=>objs.push({t:'stn',s:q,name:NM[(i0+k*3)%40],state:0,w:0},{t:'sign',s:q-900,lim:100,fx:1},{t:'sign',s:q-450,lim:60,fx:1},{t:'sign',s:q+80,lim:EXK.includes(k)?150:[100,120,150][k%3],fx:1}));
-  UP.forEach((q,k)=>objs.push({t:'ustn',s:q,name:NM[(i0+k*3+1)%40],we:0}));
-  const occ=[];SP.forEach(q=>occ.push([q-1000,q+120]));UP.forEach(q=>occ.push([q-200,q+120]));EX.forEach(r=>occ.push(r));
-  EX.forEach(([a,b])=>{for(let x=a+1100;x<b-300;x+=1300)objs.push({t:'sign',s:x,lim:150,fx:1})});
-  const bad=(a,b)=>occ.some(r=>b>r[0]&&a<r[1]);
-  /* bridges and level crossings: one candidate per gap between stations */
-  XG=[];BR=[];
-  const ALL=[...SP,...UP].sort((a,b)=>a-b),gaps=[[700,ALL[0]-560]];
-  ALL.forEach((q,i)=>gaps.push([q+520,i+1<ALL.length?ALL[i+1]-560:LEN-500]));
-  const g2=[];gaps.forEach(([lo,hi])=>{const n=Math.max(1,Math.round((hi-lo)/1500));for(let i=0;i<n;i++)g2.push([lo+(hi-lo)*i/n+(i?400:0),lo+(hi-lo)*(i+1)/n])});
-  g2.forEach(([lo,hi],gi)=>{const r=rnd(gi*2.9+day*1.3);
-    if(r<.45){const len=70+Math.floor(rnd(gi*7.7+day)*100);if(hi-len>lo){const pos=Math.floor(lo+rnd(gi*3.3+day)*(hi-len-lo));
-      BR.push({s:pos,len});occ.push([pos-330,pos+len+70]);objs.push({t:'sign',s:pos-250,lim:inEx(pos-250)?150:80,fx:1},{t:'sign',s:pos+len+60,lim:inEx(pos+len+60)?150:100,fx:1})}}
-    else if(r<.9&&hi>lo){const pos=Math.floor(lo+rnd(gi*3.3+day)*(hi-lo));XG.push({s:pos});occ.push([pos-330,pos+70])}});
-  /* random speed signs and signal pairs */
-  let p=30;
-  while(p<LEN-700){p+=260+rnd(p+day)*320;
-    if(rnd(p*3+day)<.6){if(!bad(p,p))objs.push({t:'sign',s:p,lim:LIMS[Math.floor(rnd(p*7+day)*LIMS.length)]})}
-    else if(!bad(p,p+560)){const h={t:'sig',s:p+500,red:rnd(p*5+day)<.5,w:0,done:0};
-      objs.push({t:'dsig',s:p,ref:h},h);p+=560}}
-  {let pv=40;objs.filter(o=>o.t=='sign').sort((a,b)=>a.s-b.s).forEach(o=>{if(!o.fx&&o.lim==pv){let n=o.lim;for(let i=0;n==pv&&i<9;i++)n=LIMS[Math.floor(rnd(o.s*1.3+i*5.1+day)*LIMS.length)];o.lim=n}pv=o.lim})}
-  /* horn boards: sign at s, honk must happen between s and cs */
-  objs.filter(o=>o.t=='stn'||o.t=='ustn').forEach(o=>objs.push({t:'hs',s:o.s-(o.t=='stn'?420:400),cs:o.s-(o.t=='stn'?120:100),nm:o.name,hk:0,done:0}));
-  XG.forEach(x=>objs.push({t:'hs',s:x.s-300,cs:x.s,nm:'level crossing',hk:0,done:0}));
-  BR.forEach(b=>objs.push({t:'hs',s:b.s-300,cs:b.s,nm:'bridge',hk:0,done:0}));
-  objs.push({t:'end',s:LEN});
-  STL=objs.filter(o=>o.t=='stn'||o.t=='ustn');STN=objs.filter(o=>o.t=='stn');
-  /* forests, rain, rivers */
-  KZ=[];{let a=0,pk=-1,i=0;while(a<LEN+800){const l=700+rnd(a+day*9)*1100;let k=[0,1,1,2,2,3,3][Math.floor(rnd(a*1.7+day*5+i)*7)];if(k==pk)k=(k+1)%4;KZ.push({a,b:a+l,k});pk=k;a+=l;i++}}
-  RZ=[];{let a=1500+rnd(day*3)*2000,i=0;while(a<LEN-2500){if(rnd(a*.7+day*11+i)<.6){const l=2000+rnd(a+day)*3500;RZ.push({a,b:a+l,i:.5+rnd(a*.3+day)*.5});a+=l+2500+rnd(a)*3000}else a+=2500;i++}}
-  GZ=[];
-  RV=[];for(let k=0;k<10;k++){const a=1000+k*4000+rnd(day*4+k)*1500;RV.push({a,b:a+900+rnd(a)*900,sd:rnd(day*6+k)<.5?-1:1})}
-  {let lm=40,ps=0;clock=0;ideal=20;objs.slice().sort((a,b)=>a.s-b.s).forEach(o=>{ideal+=(o.s-ps)/(lm/3.6);ps=o.s;if(o.t=='sign')lm=o.lim;else if(o.t=='stn'||(o.t=='sig'&&o.red))ideal+=4+.8*lm/3.6})}
+  objs=[];STL=[];STN=[];BR=[];XG=[];KZ=[];RZ=[];RV=[];GZ=[];occ=[];CP=[[0,20]];IDL=20;PS=0;LM=40;SEC=0;GEN=0;KE=0;RE=1500+rnd(day*3)*2000;VE=1000;ki=0;ri=0;vi=0;pk=-1;served=0;missed=0;recent=[];
+  while(GEN<3500)genSection();
   {const kt=KC[kindAt(0)];GC=kt[0].slice();GB=kt[1].slice()}
   RAIN=rainTarget();
 }
+let occ=[],CP=[[0,20]],IDL=20,PS=0,LM=40,SEC=0,GEN=0,KE=0,RE=0,VE=0,ki=0,ri=0,vi=0,pk=-1,served=0,missed=0,recent=[];
+const PRE=['Pine','Marsh','Birch','Iron','Cold','Ash','Mill','Raven','Elm','Stone','Wren','Fox','Kettle','Alder','Harrow','Dun','Salt','Lark','Thorn','Wick','Copper','Hazel','Oak','Swan','Fen','Moss','Red','Cinder','Ivy','Grey','Linden','Nettle','Briar','Quarry','Willow','Sedge'];
+const SUF=['Hollow','Cross','Lane','Bridge','Spring','Halt','Brook','Gap','Junction','Haven','Valley','Moor','Ford','Hill','Mere','Green','Dale','Reach','Lake','Gate','Water','Row','Park','Fold','Cliff','End','Bank','Run'];
+function pickName(sd){for(let i=0;i<40;i++){const n=PRE[Math.floor(rnd(sd+i*3.7)*PRE.length)]+' '+SUF[Math.floor(rnd(sd*1.3+i*5.9+2)*SUF.length)];if(!recent.includes(n)){recent.push(n);if(recent.length>60)recent.shift();return n}}return'Halt '+Math.floor(sd)}
+function extZones(to){
+  while(KE<to){const a=KE,l=700+rnd(a+day*9)*1100;let k=[0,1,1,2,2,3,3][Math.floor(rnd(a*1.7+day*5+ki)*7)];if(k==pk)k=(k+1)%4;KZ.push({a,b:a+l,k});pk=k;KE=a+l;ki++}
+  while(RE<to){if(rnd(RE*.7+day*11+ri)<.6){const l=2000+rnd(RE+day)*3500;RZ.push({a:RE,b:RE+l,i:.5+rnd(RE*.3+day)*.5});RE+=l+2500+rnd(RE)*3000}else RE+=2500;ri++}
+  while(VE<to){const a=1000+vi*4000+rnd(day*4+vi)*1500;RV.push({a,b:a+900+rnd(a)*900,sd:rnd(day*6+vi)<.5?-1:1});vi++;VE=1000+vi*4000}
+}
+const LIMS=[40,60,80,100,100,120,120,150,150,150];
+function genSection(){
+  objs=objs.filter(o=>o.s>s-1500);occ=occ.filter(r=>r[1]>s-3000);STN=STN.filter(o=>o.s>s-3500);STL=STL.filter(o=>o.s>s-3500);BR=BR.filter(o=>o.s+o.len>s-800);XG=XG.filter(o=>o.s>s-800);KZ=KZ.filter(z=>z.b>s-3000);RZ=RZ.filter(z=>z.b>s-3000);RV=RV.filter(z=>z.b>s-3000);while(CP.length>3&&CP[2][0]<s-2000)CP.shift();
+  const k=SEC++,R=a=>rnd(k*7.31+a*2.17+day),pick=(A,a)=>A[Math.floor(R(a)*A.length)];
+  const b=GEN,ex=k>0&&R(1)<.28,Ls=k==0?2300+Math.floor(R(2)*500):ex?6000+Math.floor(R(2)*900):3300+Math.floor(R(2)*900),q=b+Ls;
+  const sec=[],add=o=>{sec.push(o);objs.push(o);return o},inEx=x=>ex&&x>b+100&&x<q-950,bad=(a,c)=>occ.some(r=>c>r[0]&&a<r[1]);
+  if(k==0)add({t:'sign',s:30,lim:40,fx:1});else add({t:'sign',s:b+80,lim:ex?150:pick([100,120,150],3),fx:1});
+  const nm=pickName(k*9.7+day*2.1),stn=add({t:'stn',s:q,name:nm,state:0,w:0});STN.push(stn);STL.push(stn);
+  add({t:'sign',s:q-900,lim:pick([100,120],4),fx:1});add({t:'sign',s:q-450,lim:pick([60,80],5),fx:1});
+  add({t:'hs',s:q-420,cs:q-120,nm,hk:0,done:0});occ.push([q-1000,q+130]);
+  if(k>0){const u=b+(ex?2900:1600)+Math.floor(R(6)*200),un=pickName(k*5.3+day*1.7+9),o=add({t:'ustn',s:u,name:un,we:0});STL.push(o);occ.push([u-450,u+130]);add({t:'hs',s:u-400,cs:u-100,nm:un,hk:0,done:0})}
+  if(ex)for(let x=b+1200;x<q-1250;x+=1300)if(!bad(x-100,x+100))add({t:'sign',s:x,lim:150,fx:1});
+  /* bridges and level crossings: at most one per 1500 m window, never overlapping other features */
+  for(let i=0,x=b+600;x<q-1100;i++,x+=1500){const r=R(20+i),pos=x+Math.floor(R(40+i)*1100);
+    if(r<.45){const len=70+Math.floor(R(60+i)*100);if(pos+len<q-1100&&!bad(pos-340,pos+len+80)){BR.push({s:pos,len});occ.push([pos-330,pos+len+70]);
+      add({t:'sign',s:pos-250,lim:inEx(pos-250)?150:80,fx:1});add({t:'sign',s:pos+len+60,lim:inEx(pos)?150:100,fx:1});add({t:'hs',s:pos-300,cs:pos,nm:'bridge',hk:0,done:0})}}
+    else if(r<.9&&pos<q-1100&&!bad(pos-340,pos+80)){XG.push({s:pos});occ.push([pos-330,pos+70]);add({t:'hs',s:pos-300,cs:pos,nm:'level crossing',hk:0,done:0})}}
+  /* random signs and signal pairs, min spacing enforced */
+  for(let p=b+250;;){p+=260+rnd(p+day)*320;if(p>q-1250)break;if(inEx(p))continue;
+    if(rnd(p*3+day)<.6){if(!bad(p-120,p+120))add({t:'sign',s:p,lim:LIMS[Math.floor(rnd(p*7+day)*LIMS.length)]})}
+    else if(!bad(p-220,p+760)&&!inEx(p+760)){const rd=rnd(p*5+day)<.5,h={t:'sig',s:p+500,red:rd,r0:rd,w:0,done:0};add({t:'sign',s:p-100,lim:80,fx:1});add({t:'dsig',s:p,ref:h});add(h);p+=560}}
+  sec.sort((a,c)=>a.s-c.s);
+  sec.forEach(o=>{IDL+=(o.s-PS)/(LM/3.6);PS=o.s;
+    if(o.t=='sign'){if(!o.fx&&o.lim==LM){let n=o.lim;for(let i=0;n==LM&&i<9;i++)n=LIMS[Math.floor(rnd(o.s*1.3+i*5.1+day)*LIMS.length)];o.lim=n}LM=o.lim}
+    else if(o.t=='stn'||(o.t=='sig'&&o.red))IDL+=35;
+    CP.push([o.s,IDL])});
+  GEN=q;extZones(q+3500);
+}
+/* Score: distance x time factor. Expected time is built from the course actually passed:
+   time at posted limits + per speed sign + per station + per signal (+ extra if it was red). */
+function calc(){
+  const km=s/1000,exp=runT*EXP_K+nSign*EXP_SIGN+nStn*EXP_STN+nSig*EXP_SIG+nRed*EXP_RED;
+  const tf=clock>1?clamp(exp/clock,.4,1.25):1;
+  return{km,exp,tf,score:Math.round(km*PTS_KM*tf)}
+}
+function finish(){st='sum';cq=false;slip=null;const c=calc();sumScore=c.score;newBest=false;
+  if(!devRun){if(best===null||c.score>best){best=c.score;newBest=true}try{localStorage.setItem('nightline_best_v2',String(best))}catch(e){}}}
 newShift();
 function cite(txt,fine){fines+=fine;ncite++;slip={txt,fine,n:++cn,t:0};stamp()}
 
 function update(dt){
-  const K=keys;clock+=dt;
+  const K=keys;clock+=dt;if(GEN<s+3500)genSection();
   if(K.ArrowUp||K.KeyW)thr+=.5*dt;if(K.ArrowDown||K.KeyS)thr-=.7*dt;
   if(K.ArrowRight||K.KeyD)brk+=.6*dt;if(K.ArrowLeft||K.KeyA)brk-=.8*dt;
   thr=clamp(thr,0,1);brk=clamp(brk,0,1);
-  const be=K.Space?1.4:brk,te=thr;
+  const be=K.Space?1:brk,te=thr;
   /* adhesion, sanding, slip */
   sanding=!!K.KeyE&&sand>0;
   if(sanding){sand=Math.max(0,sand-2*dt);sandT=7}else sandT=Math.max(0,sandT-dt);
@@ -141,6 +168,7 @@ function update(dt){
   if(v<.2)moving=false;else if(!moving&&v>=.5){moving=true;if(hk>12)cite('Started moving without sounding horn',20)}
   const acc=te*1.3*Math.max(0,1-(v/48)**2)*(slipping?.5:1),dec=be*1.3*(slipping?.8:1)+.02+v*v*.00004;
   v=Math.max(0,v+(acc-dec)*dt);s+=v*dt;
+  runT+=v*dt/(limit/3.6);   /* time it would take at the posted limit */
   const k=Math.min(1,dt*4);dv+=(v-dv)*k;dthr+=((te+(slipping?.25:0))-dthr)*k;dbrk+=(be-dbrk)*k;
   const kmh=v*3.6;
   let allow=limit+TOL;
@@ -149,19 +177,21 @@ function update(dt){
   if(kmh>allow&&spdCd<=0){over+=dt;if(over>2.5){cite(`Speeding: ${Math.round(kmh)} km/h in a ${limit} zone`,FINE_SPD);spdCd=20;over=0}}
   else over=Math.max(0,over-dt*2);
   for(const o of objs){
-    if(o.t=='sign'&&!o.done&&s>=o.s){o.done=1;if(o.lim<limit&&kmh>o.lim+TOL){grace=1;gv=kmh;gt=0;gd=4+(kmh-o.lim)*.05}else grace=0;limit=o.lim;spdCd=0;over=0}
+    if(o.t=='sign'&&!o.done&&s>=o.s){o.done=1;nSign++;if(o.lim<limit&&kmh>o.lim+TOL){grace=1;gv=kmh;gt=0;gd=4+(kmh-o.lim)*.05}else grace=0;limit=o.lim;spdCd=0;over=0}
     if(o.t=='hs'&&!o.done){if(s>=o.s&&s<o.cs&&hornGood)o.hk=1;if(s>=o.cs){o.done=1;if(!o.hk)cite('No horn sounded at '+o.nm,25)}}
-    if(o.t=='stn'&&!o.state){const d=o.s-s;if(d<40&&d>-12&&v<.3){o.w+=dt;if(o.w>6){o.state=1;sand=Math.min(100,sand+50);chime()}}else if(d<=-12){o.state=2;cite('Station overrun: '+o.name,30)}else if(d>=40&&d<120&&v<.3){o.we=(o.we||0)+dt;if(o.we>3&&!o.early){o.early=1;cite('Stopped short of '+o.name,20)}}}
+    if(o.t=='stn'&&!o.pc&&(s>=o.s||o.state==1)){o.pc=1;nStn++}
+    if(o.t=='stn'&&!o.state){const d=o.s-s;if(d<40&&d>-12&&v<.3){o.w+=dt;if(o.w>6){o.state=1;served++;sand=Math.min(100,sand+50);chime()}}else if(d<=-12){o.state=2;missed++;cite('Station overrun: '+o.name,30)}else if(d>=40&&d<120&&v<.3){o.we=(o.we||0)+dt;if(o.we>3&&!o.early){o.early=1;cite('Stopped short of '+o.name,20)}}}
     if(o.t=='ustn'&&!o.hit){const d=o.s-s;if(d>-60&&d<100&&v<.3){o.we+=dt;if(o.we>2){o.hit=1;cite('Unscheduled stop at '+o.name,30)}}}
     if(o.t=='sig'){const d=o.s-s;
       if(o.red&&d>0&&d<150&&v<.3){o.w+=dt;if(o.w>4)o.red=false}
-      if(!o.done&&s>=o.s){o.done=1;if(o.red){cite('Signal passed at danger',FINE_RED);o.red=false}}}}
+      if(!o.done&&s>=o.s){o.done=1;nSig++;if(o.r0)nRed++;if(o.red){cite('Signal passed at danger',FINE_RED);o.red=false}}}}
   if(v<.3&&s>20&&!objs.some(o=>{const d=o.s-s;return(o.t=='sig'&&(o.red||o.w>0)&&d>-5&&d<160)||((o.t=='stn'||o.t=='ustn')&&d>-60&&d<160)})){idle+=dt;if(idle>8){idle=-30;cite('Stopped on the line without cause',30)}}else idle=0;
   if(slip){slip.t+=dt;if(slip.t>8)slip=null}
-  if(s>=LEN){st='sum';sv=objs.filter(o=>o.t=='stn'&&o.state==1).length;late=clock>ideal*1.5+60;if(late){fines+=60;ncite++}slip=null;sumNet=WAGE+sv*20-fines-LIVING;best=best===null?sumNet:Math.max(best,sumNet)}
+  /* too many citations: run ends */
+  if(fines>MAXF){endWhy='Fines over $'+MAXF+'. Licence suspended.';finish()}
 }
-let sumNet=0,sv=0;
-const rate=n=>n>=450?'S':n>=350?'A':n>=250?'B':n>=150?'C':n>=50?'D':'F';
+let sv=0,cq=false;
+const rate=n=>n>=6000?'S':n>=4000?'A':n>=2500?'B':n>=1500?'C':n>=500?'D':'F';
 
 /* ---------- audio ---------- */
 let AC,master,eng,eng2,lfo,windG,engG,hissG,hornG,rainG,sandG,nbuf,muted=false;
@@ -183,20 +213,28 @@ function initAudio(){
   [311,392,466].forEach(f=>{const o=AC.createOscillator();o.type='sawtooth';o.frequency.value=f;const l=AC.createBiquadFilter();l.type='lowpass';l.frequency.value=1400;o.connect(l);l.connect(hornG);o.start()});
 }
 function toggleMute(){muted=!muted;if(master)master.gain.value=muted?0:.9;document.getElementById('mute').textContent=muted?'🔇 Sound off (M)':'🔊 Sound on (M)'}
-function cycleTod(){todMode=(todMode+1)%5;document.getElementById('tod').textContent='🕒 Time: '+TODN[todMode]+' (N)'}
+/* ---------- dev mode (Shift+O) ---------- */
 let fpsOn=true;
-function toggleFps(){fpsOn=!fpsOn;fpsEl.style.display=fpsOn?'':'none';document.getElementById('fp').textContent='📊 FPS: '+(fpsOn?'On':'Off')+' (F)'}
-function cycleRain(){rainMode=(rainMode+1)%4;document.getElementById('rn').textContent='🌧 Rain: '+RNN[rainMode]+' (P)'}
+const labTod=()=>{document.getElementById('tod').textContent='🕒 Time: '+TODN[todMode]+' (N)'};
+const labRain=()=>{document.getElementById('rn').textContent='🌧 Rain: '+RNN[rainMode]+' (P)'};
+const labFps=()=>{document.getElementById('fp').textContent='📊 FPS: '+(fpsOn?'On':'Off')+' (F)'};
+function cycleTod(){if(!devMode)return;todMode=(todMode+1)%5;labTod()}
+function toggleFps(){if(!devMode)return;fpsOn=!fpsOn;fpsEl.style.display=fpsOn?'block':'none';labFps()}
+function cycleRain(){if(!devMode)return;rainMode=(rainMode+1)%4;labRain()}
+function setDev(on){devMode=on;document.body.classList.toggle('dev',on);
+  if(on)devRun=true;                       /* this run no longer counts for score */
+  else{todMode=0;rainMode=0;labTod();labRain()}
+  fpsEl.style.display=(on&&fpsOn)?'block':'none'}
 function tick(dl=0){const t=AC.currentTime+dl,b=AC.createBufferSource();b.buffer=nbuf;const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=800+Math.random()*500;
   const gn=AC.createGain();gn.gain.setValueAtTime(.4*clamp(v/18,.3,1),t);gn.gain.exponentialRampToValueAtTime(.001,t+.08);b.connect(f);f.connect(gn);gn.connect(master);b.start(t,Math.random(),.1)}
 function chime(){if(!AC)return;[660,523].forEach((f,i)=>{const t=AC.currentTime+i*.4,o=AC.createOscillator(),gn=AC.createGain();o.frequency.value=f;gn.gain.setValueAtTime(.0001,t);gn.gain.exponentialRampToValueAtTime(.3,t+.02);gn.gain.exponentialRampToValueAtTime(.001,t+1.2);o.connect(gn);gn.connect(master);o.start(t);o.stop(t+1.3)})}
 function stamp(){if(!AC)return;const t=AC.currentTime,o=AC.createOscillator(),gn=AC.createGain();o.frequency.setValueAtTime(140,t);o.frequency.exponentialRampToValueAtTime(45,t+.25);
   gn.gain.setValueAtTime(.7,t);gn.gain.exponentialRampToValueAtTime(.001,t+.3);o.connect(gn);gn.connect(master);o.start(t);o.stop(t+.35)}
 function audio(){
-  if(!AC)return;const t=AC.currentTime,dr=st=='drive'&&!book;
+  if(!AC)return;const t=AC.currentTime,dr=st=='drive'&&!book&&!cq&&!dq;
   engG.gain.setTargetAtTime(dr?.14+dthr*.22+v*.004:0,t,.1);eng.frequency.setTargetAtTime(38+dthr*40+v*.8+(slipping?26:0),t,.2);eng2.frequency.setTargetAtTime(19+dthr*20+v*.4,t,.2);lfo.frequency.setTargetAtTime(7+dthr*12,t,.3);
   windG.gain.setTargetAtTime(dr?(v/35)**2*.3:0,t,.2);
-  hissG.gain.setTargetAtTime(dr?Math.min(.25,Math.abs((keys.Space?1.4:brk)-dbrk)*.4+dbrk*.012*clamp(v,0,1)):0,t,.05);
+  hissG.gain.setTargetAtTime(dr?Math.min(.25,Math.abs((keys.Space?1:brk)-dbrk)*.4+dbrk*.012*clamp(v,0,1)):0,t,.05);
   hornG.gain.setTargetAtTime(dr&&keys.KeyH?.22:0,t,.03);
   rainG.gain.setTargetAtTime(dr?RAIN*.12:0,t,.3);sandG.gain.setTargetAtTime(dr&&sanding?.1:0,t,.05);
   const c=Math.floor(s/9);if(dr&&c!=lastClick){lastClick=c;if(v>1){tick();tick(Math.min(.25,2.5/v))}}
@@ -256,13 +294,13 @@ function world(){
   for(let j=Math.ceil(s/230);j*230<s+900;j++)if(rnd(j*3.1)<.55){const d=j*230+rnd(j)*120;if(d-s>.7&&!blk(d))it.push({z:d-s,k:'house',l:(rnd(j+8)<.5?-1:1)*(22+rnd(j+3)*40),c:rnd(j+1)})}
   for(let i=Math.floor(s/11);i<(s+900)/11;i++)for(let sd=-1;sd<2;sd+=2){
     const r=rnd(i*2+sd*7.3),d=i*11+rnd(i+sd)*9,z=d-s,zn=ST.some(o=>d>o.s-170&&d<o.s+80),kd=kindAt(d),bk=blk(d),rv=rivAt(d,sd);
-    let l=zn?14+r*14:kd==1?3.4+r*r*16:3.8+r*r*26;if(rv&&!zn)l=Math.min(l,9.5);
+    let l=zn?14+r*14:kd==1?8+r*r*16:8.5+r*r*26;if(rv&&!zn)l=Math.min(l,10);
     if(z>.7&&!bk&&(kd!=3||rnd(i*9+sd)<.14)){it.push({z,k:'t',kd,l:sd*l,h:(kd==1?10:7)+rnd(i*3+sd)*9,c:rnd(i*5+sd)});
-      if(kd==1&&!zn)it.push({z:z+4,k:'t',kd,l:sd*Math.min(2.8+rnd(i+11)*10,rv?9.5:99),h:10+rnd(i*4+sd)*9,c:rnd(i*6+sd)})}
-    const d2=d+5+rnd(i+9)*4,z2=d2-s;if(z2>.7&&!blk(d2)&&!ST.some(o=>d2>o.s-170&&d2<o.s+80))it.push({z:z2,k:'t',b:1,l:sd*(2.7+rnd(i+4)*4),h:.7+rnd(i*7+sd)*.9,c:0})}
+      if(kd==1&&!zn)it.push({z:z+4,k:'t',kd,l:sd*Math.min(8+rnd(i+11)*10,rv?10:99),h:10+rnd(i*4+sd)*9,c:rnd(i*6+sd)})}
+    const d2=d+5+rnd(i+9)*4,z2=d2-s;if(z2>.7&&!blk(d2)&&!ST.some(o=>d2>o.s-170&&d2<o.s+80))it.push({z:z2,k:'t',b:1,l:sd*(5.2+rnd(i+4)*4),h:.7+rnd(i*7+sd)*.9,c:0})}
   XG.forEach(o=>{[-4,4].forEach(dz=>{const z=o.s+dz-s,dd=o.s-s;if(z>.7&&z<900)[-1,1].forEach(sd=>it.push({z,k:'xm',o,l:sd*3.9,act:dd<380&&dd>-6}))})});
   objs.forEach(o=>{if(o.s<s-60||o.s>s+1050)return;if(o.t=='stn'||o.t=='ustn'){[['nb',-130],['ss',0],['sh',-55],['lp',-90],['lp',-20],['lp',12]].forEach(([k,dd])=>{const z=o.s+dd-s;if(z>.7&&z<900&&!(k=='ss'&&o.t=='ustn'))it.push({z,k,o,l:{nb:7.4,ss:3,sh:4.8,lp:5.2}[k],pl:k=='sh'||k=='lp'?1:0})});const zz=o.s+30-s;if(zz>.7&&zz<900)it.push({z:zz,k:'sig',o:{red:o.t=='stn'&&o.state!=1},pl:1,l:4.4});return}const z=o.s-s;if(z>.7&&z<900)it.push({z,k:o.t,o,l:o.t=='hs'?-3.6:3.2})});
-  it.sort((a,b)=>b.z-a.z);
+  const sk=e=>e.z*(e.k=='t'||e.k=='house'?1:.6);it.sort((a,b)=>sk(b)-sk(a));
   g.textAlign='center';g.textBaseline='middle';
   for(let ii=0;ii<it.length;ii++){const e=it[ii];
     const z=e.z,sc=F/z,x=cx+(off(z)+e.l)*sc,gy=hor+(CH-(e.pl||0))*sc,fg=clamp(z/(900-450*RAIN),0,1)**.7;
@@ -310,9 +348,9 @@ function tree(e,x,gy,sc,fg){const h=e.h*sc,M=c=>mix(c,FOG,fg);
   for(let t=0;t<3;t++){const by=gy-h*(.25+t*.22),w=h*(.2-t*.04),ty=by-h*.4;g.fillStyle=M([30,68,34]);g.beginPath();g.moveTo(x-w,by);g.lineTo(x,ty);g.lineTo(x+w,by);g.fill();g.fillStyle=M([60,110,48]);g.beginPath();g.moveTo(x,by);g.lineTo(x,ty);g.lineTo(x+w,by);g.fill()}}
 function clipb(x,y,w,h){const fs=clamp(W*.0085,8,13),L=STN,nx=L.find(o=>!o.state),ns=clamp(Math.floor((h-24-fs*5.2)/(fs*1.6)),2,5),ix=nx?L.indexOf(nx):L.length-1,a0=clamp(ix-1,0,Math.max(0,L.length-ns)),done=L.filter(o=>o.state==1).length;
   g.fillStyle='#5b4326';g.fillRect(x,y,w,h);g.fillStyle='#e6dfc4';g.fillRect(x+4,y+10,w-8,h-14);g.fillStyle='#777';g.fillRect(x+w*.35,y,w*.3,14);
-  g.fillStyle='#1b1a16';g.textAlign='left';g.textBaseline='top';g.font=`bold ${fs}px "Courier New",monospace`;g.fillText('TIMETABLE '+done+'/'+L.length,x+8,y+18);
+  g.fillStyle='#1b1a16';g.textAlign='left';g.textBaseline='top';g.font=`bold ${fs}px "Courier New",monospace`;g.fillText('TIMETABLE '+served,x+8,y+18);
   L.slice(a0,a0+ns).forEach((o,i)=>{g.font=`${fs}px "Courier New",monospace`;g.fillStyle=o.state==2?'#b3261e':o==nx?'#0b4f9a':o.state?'#2a6b2a':'#1b1a16';g.fillText((o.state==1?'[x] ':o.state==2?'[!] ':o==nx?'[>] ':'[ ] ')+o.name,x+8,y+22+fs*1.6*(i+1))});
-  g.font=`${fs}px "Courier New",monospace`;g.fillStyle='#1b1a16';g.fillText('NOW '+mmss(clock),x+8,y+h-fs*4.9);g.fillText('DUE '+mmss(ideal*1.5+60),x+8,y+h-fs*3.5);g.fillText('FINES -$'+fines,x+8,y+h-fs*2.1)}
+  g.font=`${fs}px "Courier New",monospace`;g.fillStyle='#1b1a16';g.fillText('NOW '+mmss(clock),x+8,y+h-fs*4.9);g.fillStyle=fines>MAXF*.75?'#b3261e':'#1b1a16';g.fillText('FINES $'+fines+'/'+MAXF,x+8,y+h-fs*3)}
 /* ---------- drawing: lighting, rain ---------- */
 function night(){
   const dk=.74*(1-LV)**1.8+RAIN*.12*LV;
@@ -411,12 +449,27 @@ function render(){
   night();rainFX();cab();
   if(LV<.6){g.fillStyle=`rgba(0,0,10,${(.6-LV)*.4})`;g.fillRect(0,H*.6,W,H*.4)}
   vig();
-  if(st!='drive'||book){g.fillStyle='rgba(0,0,0,.6)';g.fillRect(0,0,W,H)}
+  if(st!='drive'||book||cq||dq){g.fillStyle='rgba(0,0,0,.6)';g.fillRect(0,0,W,H)}
   drawSlip();
-  if(st=='title')sheet('NIGHT LINE - TRAIN SHIFT',["No HUD. Read your gauges and the trackside.","","UP/DOWN or W/S ..... throttle","RIGHT/LEFT or D/A .. apply / release brake","SPACE .............. emergency brake","H .................. horn (hold)","E .................. sand (hold)","L .................. headlight","N .................. time of day","P .................. rain","R .................. rulebook (pauses)","M .................. mute sound","","Sound the horn, release the brake, go."],'Click or press ENTER to start');
-  else if(st=='book')sheet('BULLETIN - '+(LEN/1000)+' KM RUN',["Brake is applied. One long shift.","",...RULES],'ENTER to begin your shift',.012);
-  else if(st=='sum'){sheet('END OF RUN',["Wage ................. +$"+WAGE,"Stops served ("+sv+"/"+NSTN+") .. +$"+sv*20,"Due "+mmss(ideal*1.5+60)+" / yours "+mmss(clock)+(late?"  LATE":""),"Citations ("+ncite+") ...... -$"+fines,"Living costs .......... -$"+LIVING,"-----------------------------","MONEY SAVED ........... "+(sumNet<0?'-':'')+'$'+Math.abs(sumNet),"Rating ................ "+rate(sumNet),"Best this session ..... $"+best,"",sumNet<0?"You owe money. Your family suffers.":sumNet>=250?"Your family is proud of you.":"Your family gets by."],'ENTER for a new run')}
+  if(dq==1)sheet('DEV MODE',['Turn on developer tools?','','Adds buttons for time of day, rain','and FPS display.','','SCORE WILL NOT BE COUNTED while dev','mode is on (this run and its high','score are ignored).','','Y / ENTER ... yes, turn on dev mode','N / ESC ..... no, cancel'],'The game is paused',.008);
+  else if(dq==2)sheet('DEV MODE',['Dev mode is ON.','','Turn it off and hide the dev buttons?','','Note: this run stays uncounted.','','Y / ENTER ... yes, turn off','N / ESC ..... no, keep it on'],'The game is paused',.008);
+  else if(st=='title')sheet('NIGHT LINE - TRAIN SHIFT',["No HUD. Read your gauges and the trackside.","","UP/DOWN or W/S ..... throttle","RIGHT/LEFT or D/A .. apply / release brake","SPACE .............. full brake (same as lever max)","H .................. horn (hold)","E .................. sand (hold)","L .................. headlight","R .................. rulebook (pauses)","M .................. mute sound","Q .................. end run","","Sound the horn, release the brake, go."],'Click or press ENTER to start');
+  else if(st=='book')sheet('BULLETIN - ENDLESS LINE',["Brake is applied. The line never ends.","",...RULES],'ENTER to begin your shift',.012);
+  else if(st=='sum'){const c=calc();sheet('END OF RUN',[
+    "Distance ............. "+c.km.toFixed(1)+" km",
+    "Time taken ........... "+mmss(clock),
+    "Expected time ........ "+mmss(c.exp),
+    "  ("+nSign+" signs, "+nStn+" stations, "+nSig+" signals)",
+    "Time factor .......... x"+c.tf.toFixed(2),
+    "Citations ............ "+ncite+" ($"+fines+", not scored)",
+    "-----------------------------",
+    "SCORE ................ "+c.score,
+    devRun?"DEV MODE: score not counted":"Rating ............... "+rate(c.score),
+    devRun?"":"High score ........... "+(best===null?'--':best)+(newBest?"  NEW!":""),
+    "",
+    endWhy||(['S','A','B'].includes(rate(c.score))?"Your family is proud of you.":"Your family gets by.")],'ENTER for a new run')}
   else if(book)sheet('RULEBOOK',RULES,'Press R to close');
+  else if(cq)sheet('END RUN?',['End your run and see your score?','','Distance so far: '+(s/1000).toFixed(1)+' km','','Y / ENTER ... yes, end run','N / ESC ..... no, keep driving'],'The game is paused',.01);
 }
 
 /* ---------- input / loop ---------- */
@@ -429,28 +482,39 @@ function advance(){
 addEventListener('keydown',e=>{
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','Space','Tab'].includes(e.code))e.preventDefault();
   if(e.repeat&&e.code!='KeyH'){keys[e.code]=1;return}
+  /* dev-mode confirmation swallows all keys */
+  if(dq){
+    if(e.code=='KeyY'||e.code=='Enter'){setDev(dq==1);dq=0}
+    else if(e.code=='KeyN'||e.code=='Escape')dq=0;
+    return}
+  if(e.code=='KeyO'&&e.shiftKey&&!cq){dq=devMode?2:1;return}
   keys[e.code]=1;
   if(e.code=='Enter')advance();
   if(e.code=='KeyM')toggleMute();
-  if(e.code=='KeyN')cycleTod();
-  if(e.code=='KeyF')toggleFps();
-  if(e.code=='KeyP')cycleRain();
-  if(e.code=='KeyL'&&st=='drive'&&!book)lamp=!lamp;
-  if((e.code=='KeyR'||e.code=='Tab')&&st=='drive')book=!book;
+  if(devMode&&!cq){
+    if(e.code=='KeyN')cycleTod();
+    if(e.code=='KeyF')toggleFps();
+    if(e.code=='KeyP')cycleRain()}
+  if(e.code=='KeyL'&&st=='drive'&&!book&&!cq)lamp=!lamp;if(st=='drive'&&!book){if(cq){if(e.code=='KeyY'||e.code=='Enter'){cq=false;finish()}else if(e.code=='KeyN'||e.code=='Escape'||e.code=='KeyQ')cq=false}else if(e.code=='KeyQ')cq=true}
+  if((e.code=='KeyR'||e.code=='Tab')&&st=='drive'&&!cq)book=!book;
 });
 addEventListener('keyup',e=>keys[e.code]=0);
 addEventListener('pointerdown',e=>{const id=e.target.id;
+  if(dq)return;
   if(id=='mute'){initAudio();toggleMute();return}
   if(id=='tod'){cycleTod();return}
   if(id=='rn'){cycleRain();return}
   if(id=='fp'){toggleFps();return}
   if(st!='drive')advance()});
-const fpsEl=document.getElementById('fps'),pf={f:0,t:0,w:0,s:0,lo:0,ok:0,up:0,tryUp:-1e9,chk:0,base:0,old:0,noDown:0};
+const fpsEl=document.getElementById('fps'),hintEl=document.getElementById('hint'),pf={f:0,t:0,w:0,s:0,lo:0,ok:0,up:0,tryUp:-1e9,chk:0,base:0,old:0,noDown:0};
+let hintTxt=null;
+function hud(){const show=st=='drive'&&!book&&!cq&&!dq,t=show?'Press Q to end run'+(devRun?'  |  DEV MODE: score off':''):'';
+  if(t!==hintTxt){hintTxt=t;hintEl.textContent=t;hintEl.style.display=show?'block':'none'}}
 function perf(n,ft){
   if(ft<200){pf.f++;pf.t+=ft;if(ft>pf.w)pf.w=ft}
   if(!pf.s)pf.s=n;
   if(n-pf.s<500)return;
-  if(pf.f){const avg=pf.t/pf.f;if(fpsOn)fpsEl.textContent='FPS '+Math.round(1000/avg)+' | '+avg.toFixed(1)+' ms (max '+pf.w.toFixed(0)+') | res '+QS.toFixed(2)+'x';
+  if(pf.f){const avg=pf.t/pf.f;if(devMode&&fpsOn)fpsEl.textContent='FPS '+Math.round(1000/avg)+' | '+avg.toFixed(1)+' ms (max '+pf.w.toFixed(0)+') | res '+QS.toFixed(2)+'x';
     if(n>3000){
       if(pf.chk>0&&--pf.chk==0&&avg>pf.base*.9){QS=pf.old;pf.noDown=n+120000;pf.lo=0;pf.ok=0;rs()}
       else if(avg>22){pf.lo++;pf.ok=0}else{pf.lo=0;pf.ok=avg<18?pf.ok+500:0}
@@ -459,7 +523,7 @@ function perf(n,ft){
   pf.f=0;pf.t=0;pf.w=0;pf.s=n}
 let last=performance.now();
 function frame(n){const ft=n-last,dt=Math.min(.05,ft/1000);last=n;perf(n,ft);T+=dt;env(dt);{const c=2*Math.PI;if(RAIN>.05||wph>0){wph+=dt*3.2;if(wph>=c)wph=RAIN>.05?wph-c:0}}
-  if(st=='drive'&&!book)update(dt);
-  render();audio();requestAnimationFrame(frame)}
+  if(st=='drive'&&!book&&!cq&&!dq)update(dt);
+  render();audio();hud();requestAnimationFrame(frame)}
 requestAnimationFrame(frame);
 </script></body></html>
