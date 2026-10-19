@@ -142,6 +142,14 @@ function extZones(to){
   while(VE<to){const a=1000+vi*4000+rnd(day*4+vi)*1500;RV.push({a,b:a+900+rnd(a)*900,sd:rnd(day*6+vi)<.5?-1:1});vi++;VE=1000+vi*4000}
 }
 const LIMS=[40,60,80,100,100,120,120,150,150,150];
+/* Signal pairs (distant + home) are planned per window of SIG_WIN stations: at least 1, at most SIG_MAX per window. */
+const SIG_WIN=3,SIG_MAX=2;
+const isExK=k=>k>0&&rnd(k*7.31+1*2.17+day)<.28;
+function sigPlan(w){
+  const A=Array.from({length:SIG_WIN},(_,i)=>SIG_WIN*w+i).filter(k=>k>0);      /* never in the very first section */
+  const n=Math.min(A.length,1+Math.floor(rnd(w*13.7+day*3.3)*SIG_MAX));        /* 1..SIG_MAX */
+  A.sort((x,y)=>(isExK(x)-isExK(y))||(rnd(x*5.1+day*1.9)-rnd(y*5.1+day*1.9))); /* prefer non-express sections */
+  return A.slice(0,n)}
 function genSection(){
   objs=objs.filter(o=>o.s>s-1500);occ=occ.filter(r=>r[1]>s-3000);STN=STN.filter(o=>o.s>s-3500);STL=STL.filter(o=>o.s>s-3500);BR=BR.filter(o=>o.s+o.len>s-800);XG=XG.filter(o=>o.s>s-800);KZ=KZ.filter(z=>z.b>s-3000);RZ=RZ.filter(z=>z.b>s-3000);RV=RV.filter(z=>z.b>s-3000);while(CP.length>3&&CP[2][0]<s-2000)CP.shift();
   const k=SEC++,R=a=>rnd(k*7.31+a*2.17+day),pick=(A,a)=>A[Math.floor(R(a)*A.length)];
@@ -152,6 +160,12 @@ function genSection(){
   add({t:'sign',s:q-900,lim:pick([100,120],4),fx:1});add({t:'sign',s:q-450,lim:pick([60,80],5),fx:1});
   add({t:'hs',s:q-420,cs:q-120,nm,hk:0,done:0});occ.push([q-1000,q+130]);
   if(k>0){const u=b+(ex?2900:1600)+Math.floor(R(6)*200),un=pickName(k*5.3+day*1.7+9),o=add({t:'ustn',s:u,name:un,we:0});STL.push(o);occ.push([u-450,u+130]);add({t:'hs',s:u-400,cs:u-100,nm:un,hk:0,done:0})}
+  /* planned signal pair: placed first so nothing else can crowd it out */
+  if(sigPlan(Math.floor(k/SIG_WIN)).includes(k)){
+    const cand=[];for(let p=b+400;p<=q-1560;p+=50)if(!bad(p-150,p+560))cand.push(p);
+    if(!cand.length)for(let p=b+300;p<=q-1400;p+=50)if(!bad(p-120,p+520))cand.push(p);
+    if(cand.length){const p=cand[Math.floor(R(30)*cand.length)],rd=R(31)<.5,h={t:'sig',s:p+500,red:rd,r0:rd,w:0,done:0};
+      add({t:'sign',s:p-100,lim:80,fx:1});add({t:'dsig',s:p,ref:h});add(h);occ.push([p-150,p+560])}}
   if(ex)for(let x=b+1200;x<q-1250;x+=1300)if(!bad(x-100,x+100))add({t:'sign',s:x,lim:150,fx:1});
   /* bridges and level crossings: at most one per 1500 m window, never overlapping other features */
   for(let i=0,x=b+600;x<q-1100;i++,x+=1500){const r=R(20+i),pos=x+Math.floor(R(40+i)*1100);
@@ -160,8 +174,7 @@ function genSection(){
     else if(r<.9&&pos<q-1100&&!bad(pos-340,pos+80)){XG.push({s:pos});occ.push([pos-330,pos+70]);add({t:'hs',s:pos-300,cs:pos,nm:'level crossing',hk:0,done:0})}}
   /* random signs and signal pairs, min spacing enforced */
   for(let p=b+250;;){p+=260+rnd(p+day)*320;if(p>q-1250)break;if(inEx(p))continue;
-    if(rnd(p*3+day)<.6){if(!bad(p-120,p+120))add({t:'sign',s:p,lim:LIMS[Math.floor(rnd(p*7+day)*LIMS.length)]})}
-    else if(!bad(p-220,p+760)&&!inEx(p+760)){const rd=rnd(p*5+day)<.5,h={t:'sig',s:p+500,red:rd,r0:rd,w:0,done:0};add({t:'sign',s:p-100,lim:80,fx:1});add({t:'dsig',s:p,ref:h});add(h);p+=560}}
+    if(rnd(p*3+day)<.6){if(!bad(p-120,p+120))add({t:'sign',s:p,lim:LIMS[Math.floor(rnd(p*7+day)*LIMS.length)]})}}
   sec.sort((a,c)=>a.s-c.s);
   sec.forEach(o=>{IDL+=(o.s-PS)/(LM/3.6);PS=o.s;
     if(o.t=='sign'){if(!o.fx&&o.lim==LM){let n=o.lim;for(let i=0;n==LM&&i<9;i++)n=LIMS[Math.floor(rnd(o.s*1.3+i*5.1+day)*LIMS.length)];o.lim=n}LM=o.lim}
