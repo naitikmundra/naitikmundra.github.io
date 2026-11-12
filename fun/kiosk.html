@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kaizen Award · K-Infinity Kiosk</title>
+<style>
+:root{--bg:#082648;--fg:#fff;--card:rgba(255,255,255,.08);--card2:rgba(255,255,255,.16);--line:rgba(255,255,255,.28);--soft:rgba(255,255,255,.78);--gold:#f2c14e;--r:1.1rem;--pad:clamp(.9rem,2.4vmin,2.2rem)}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+html{font-size:clamp(13px,.55vw + 1.5vmin + 6px,30px);min-height:100%;background:var(--bg)}
+body{min-height:100vh;min-height:100dvh;background:var(--bg);color:var(--fg);font-family:system-ui,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;line-height:1.45;user-select:none;-webkit-user-select:none;touch-action:manipulation;overscroll-behavior:none;display:flex;flex-direction:column}
+header{padding-right:calc(var(--pad) + 8.6rem)!important;display:flex;align-items:center;gap:var(--pad);padding:var(--pad);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.brand{flex:1 1 16rem;min-width:0}
+.brand small{display:block;color:var(--gold);letter-spacing:.14em;text-transform:uppercase;font-size:.72rem;font-weight:600}
+.brand h1{font-size:clamp(1.4rem,3.4vmin + 1rem,3.2rem);line-height:1.1;font-weight:800}
+.nav{display:flex;gap:.7rem}
+.btn{appearance:none;border:1.5px solid var(--line);background:var(--card);color:var(--fg);font:inherit;font-weight:600;padding:.8rem 1.3rem;min-height:3.2rem;min-width:3.2rem;border-radius:999px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:.5rem}
+.btn:active{background:var(--card2);transform:scale(.97)}
+.dock{position:fixed;right:calc(env(safe-area-inset-right,0px) + .6rem);top:calc(env(safe-area-inset-top,0px) + .6rem);z-index:50;display:flex;gap:.35rem;padding:.25rem;border-radius:999px;background:rgba(8,38,72,.92);border:1.5px solid var(--line);box-shadow:0 .3rem 1rem rgba(0,0,0,.4)}
+.dock .btn{min-height:2.4rem;min-width:2.4rem;padding:.3rem .8rem;font-size:.85rem;border-width:1px}
+.dock .btn:disabled{opacity:.35;pointer-events:none}
+.credit{appearance:none;background:none;border:0;border-bottom:1px dashed var(--line);color:inherit;font:inherit;padding:.5rem .4rem;cursor:pointer}
+.credit:active{color:var(--gold)}
+.modal{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:var(--pad);background:rgba(3,14,30,.72);backdrop-filter:blur(3px)}
+.modal[hidden]{display:none}
+.mbox{position:relative;width:min(100%,34rem);background:var(--bg);border:1.5px solid var(--line);border-radius:var(--r);padding:calc(var(--pad)*1.6) calc(var(--pad)*1.4) calc(var(--pad)*1.4);box-shadow:0 1.5rem 3rem rgba(0,0,0,.55);text-align:center;display:grid;gap:.9rem;animation:in .25s ease}
+.mbox h3{color:var(--gold);letter-spacing:.1em;text-transform:uppercase;font-size:.95rem}
+.mbox hr{border:0;border-top:1px solid var(--line);width:60%;margin:.2rem auto}
+.mbox .role{display:grid;gap:.2rem;justify-items:center}
+.mbox .role small{color:var(--soft);font-size:.8rem;letter-spacing:.1em;text-transform:uppercase}
+.mbox .role strong{font-size:1.5rem;line-height:1.2}
+.mbox .phone{color:var(--soft);font-size:.95rem;margin-top:.2rem}
+.mx{position:absolute;top:.6rem;right:.6rem;width:2.8rem;height:2.8rem;min-width:0;padding:0;font-size:1.4rem;line-height:1}
+.stat{align-items:flex-start;gap:.3rem}.stat span{color:var(--soft)}
+.num{font-size:clamp(2.2rem,5vmin + 1rem,4.5rem);font-weight:800;color:var(--gold);line-height:1}
+.bar{appearance:none;font:inherit;color:inherit;background:none;border:0;display:grid;grid-template-columns:minmax(6rem,12rem) 1fr 2.6rem;align-items:center;gap:.7rem;width:100%;text-align:left;padding:.5rem 0;cursor:pointer}
+.bar.static{cursor:default}
+.bt{height:1.1rem;background:var(--card);border-radius:99px;overflow:hidden}
+.bt i{display:block;height:100%;width:0;background:#fff;border-radius:99px;transition:width .9s cubic-bezier(.2,.8,.2,1)}
+.bc{text-align:right;font-weight:700;color:var(--gold)}
+.bar.on .bl{color:var(--gold);font-weight:700}.bar.on .bt i{background:var(--gold)}
+.fl .b{display:none}.fl.on .b{display:block}.fl.on .f{display:none}.fl.on{background:var(--card2);border-color:var(--gold)}
+.fl small{color:var(--gold);letter-spacing:.1em;text-transform:uppercase;font-size:.72rem;font-weight:700}
+.spinning{opacity:.6;font-style:italic}
+.kj{font-size:1.3rem;color:var(--gold)}
+.btn.solid{background:#fff;color:var(--bg);border-color:#fff}
+main{flex:1;padding:var(--pad);display:flex;flex-direction:column;gap:var(--pad);animation:in .35s ease}
+@keyframes in{from{opacity:0;transform:translateY(.8rem)}to{opacity:1;transform:none}}
+h2{font-size:clamp(1.3rem,2.6vmin + .9rem,2.6rem);line-height:1.15}
+.lead{color:var(--soft);font-size:1.1rem;max-width:62ch}
+.grid{display:grid;gap:var(--pad);grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr));align-content:start}
+.grid.big{grid-template-columns:repeat(auto-fit,minmax(min(100%,18rem),1fr));flex:1;grid-auto-rows:minmax(9rem,1fr)}
+.card{appearance:none;text-align:left;font:inherit;color:inherit;background:var(--card);border:1.5px solid var(--line);border-radius:var(--r);padding:calc(var(--pad)*1.1);display:flex;flex-direction:column;gap:.5rem;cursor:pointer;position:relative;overflow:hidden}
+.card:active{background:var(--card2);transform:scale(.98)}
+.card .ico{display:block;width:2.6rem;height:2.6rem;color:var(--gold)}
+.svg{width:100%;height:100%;display:block}
+.btn .svg{width:1.2rem;height:1.2rem;flex:none}
+.card h3{font-size:1.35rem;line-height:1.2}
+.card p{color:var(--soft);font-size:.95rem}
+.card .tag{align-self:flex-start;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--bg);background:var(--gold);padding:.2rem .6rem;border-radius:99px;font-weight:700}
+.card.static{cursor:default}.card.static:active{transform:none;background:var(--card)}
+.sec{display:grid;gap:.8rem}
+.sec:first-of-type{flex:1}
+.sh{color:var(--gold);font-size:.95rem;letter-spacing:.14em;text-transform:uppercase}
+.panel{background:var(--card);border:1.5px solid var(--line);border-radius:var(--r);padding:calc(var(--pad)*1.2)}
+.panel h3{margin-bottom:.5rem;color:var(--gold);font-size:1.05rem;letter-spacing:.08em;text-transform:uppercase}
+.panel p+p{margin-top:.7rem}
+.cols{display:grid;gap:var(--pad);grid-template-columns:repeat(auto-fit,minmax(min(100%,22rem),1fr))}
+.cols>.sec{align-content:start}
+.person{display:flex;gap:.9rem;align-items:center;padding:.8rem 0;border-top:1px solid var(--line)}
+.person:first-of-type{border-top:0}
+.av{overflow:hidden;flex:none;width:3.4rem;height:3.4rem;border-radius:50%;background:#fff;color:var(--bg);display:grid;place-items:center;font-weight:800;font-size:1.2rem}
+.av img{width:100%;height:100%;object-fit:cover;display:block}
+.hero{display:flex;flex-wrap:wrap;gap:calc(var(--pad)*1.4);align-items:center}
+.hero img,.hero .ph{flex:none;width:clamp(12rem,36vmin,30rem);aspect-ratio:1;object-fit:cover;border-radius:var(--r);border:2px solid var(--line);box-shadow:0 .8rem 2rem rgba(0,0,0,.35);background:var(--card)}
+.hero .ph{display:grid;place-items:center;font-size:4rem;font-weight:800}
+.hero .txt{flex:1 1 20rem;min-width:0;display:grid;gap:.8rem}
+.hero h2{font-size:clamp(1.8rem,4.4vmin + 1rem,4rem)}
+.hero .role{color:var(--gold);letter-spacing:.12em;text-transform:uppercase;font-weight:700;font-size:.9rem}
+.person b{display:block}.person span{color:var(--soft);font-size:.9rem}
+.tl{list-style:none;border-left:3px solid var(--gold);padding-left:1.3rem;display:grid;gap:1.2rem}
+.tl li{position:relative}.tl li::before{content:"";position:absolute;left:-1.78rem;top:.45rem;width:.9rem;height:.9rem;border-radius:50%;background:var(--gold)}
+.tl b{color:var(--gold)}
+.chips{display:flex;flex-wrap:wrap;gap:.5rem}
+.chip{border:1px solid var(--line);padding:.25rem .8rem;border-radius:99px;font-size:.85rem;color:var(--soft)}
+.demo{background:#b3261e;color:#fff;font-size:.7rem;padding:.15rem .5rem;border-radius:6px;font-weight:700;align-self:flex-start}
+.q{font-size:clamp(1.1rem,1.6vmin + .8rem,1.8rem);font-style:italic;color:var(--soft);border-left:4px solid var(--gold);padding-left:1rem}
+footer{padding:.6rem var(--pad);opacity:.85;border-top:1px solid var(--line);color:var(--soft);font-size:.75rem;display:flex;justify-content:space-between;align-items:center;text-align:center;gap:1rem;flex-wrap:wrap}
+@media (orientation:portrait){.grid.big{grid-template-columns:repeat(auto-fit,minmax(min(100%,22rem),1fr))}}
+@media (prefers-reduced-motion:reduce){main{animation:none}}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><small>K-Infinity · Kapuria Human-Centric Centre of Excellence for AI &amp; Robotics</small><h1 id="title">Kaizen Award</h1></div>
+</header>
+<main id="view"></main>
+<footer><span>Mayo College, Ajmer · Est. 1875</span><button id="credit" class="credit" type="button"></button><span>Touch any card to explore</span></footer>
+<nav class="dock" aria-label="Navigation"><button class="btn" id="back">← Back</button><button class="btn solid" id="home">⌂ Home</button></nav>
+
+<div class="modal" id="modal" hidden role="dialog" aria-modal="true" aria-label="Credits">
+ <div class="mbox"><button class="btn mx" id="mclose" aria-label="Close">✕</button>
+  <h3>Credits</h3>
+  <section class="role"><small>Kiosk initiative led by</small><strong>Dr Ashish Vashistha</strong></section>
+  <hr>
+  <section class="role"><small>Developed by</small><strong>Naitik Mundra</strong><span class="phone">+91 9799416748</span></section>
+ </div></div>
+<script>
+/* ===== DATA — edit here ===== */
+// Each row: [title, area, short description, team "Name,Class,House/City;...", winner(1 = show ★ Winner)]
+// To mark winners, add ,1 at the end of a row.
+const RAW={
+junior:[
+["AI Debate Buddy","Generative AI","Debate an AI partner that takes the opposite side, then get a review of what went well, where arguments were weak and how to improve.","Medhansh Agarwal,6,Durga Das;Arshavalamb Barot,5,Durga Das;Yug Bajaj,5,Prithvi Raj;Avyaan Radhu,5,Prithvi Raj"],
+["Bolo – Language Learning Tool","Generative AI","Game-like vocabulary and grammar lessons with instant pronunciation feedback, mistakes explained in the learner’s own language, and a built-in translator.","Shobhit Kansal,6,Durga Das;Vardaan Singh Rawat,6,Durga Das;Gaurang Budhija,5,Durga Das;Reyansh Bajaj,5,Durga Das"],
+["Brainstorming Co-Pilot","Generative AI","Helps students turn a problem into ideas: it asks questions, groups similar ideas and points out strengths, weaknesses and next steps.","Jaksh Chopra,6,Ajay Pal;Devarsh Parwal,5,Ajay Pal;Arnav Tripathi,5,Ajay Pal"],
+["Food Label Analyzer","Generative AI","Reads a photo of a food label and explains nutrition, additives, allergens and health risks like high sugar, salt or trans fat in simple words.","Anhad Narang,6,Ajay Pal;Satvik Agarwal,5,Durga Das;Nandish Agarwal,5,Prithvi Raj;Krishiv Khemka,5,Prithvi Raj"],
+["Game Generator","Generative AI","Turns a plain-text idea into a playable quiz or racing game with no coding, which can then be tested and shared.","Saadik Garg,5,Ajay Pal;Kiaan Batra,4,Durga Das;Vidhaan Rawat,4,Prithvi Raj"],
+["K-Mind","Generative AI","Type any topic and the AI draws an interactive mind map from main points to details; tap a branch to learn more.","Kush Karnani,6,Ajay Pal;Kushagra Choudhary,5,Durga Das;Krishav Parashar,5,Durga Das"],
+["Mindora – Mental Health Monitor","Generative AI","Tracks mood, stress and sleep, finds patterns over time, suggests self-care and encourages talking to a trusted adult when needed. Not a substitute for medical advice.","Vedaansh Kamani,6,Ajay Pal;Drihaan Goyal,5,Prithvi Raj;Pratham Choudhary,5,Prithvi Raj;Vivaan Agarwal,5,Prithvi Raj"],
+["Research Co-Pilot","Generative AI","A team of AI agents guides you from research question to sources, evidence comparison and a finished paper backed by verified sources.","Atharva Jindal,6,Durga Das;Vivaan Raj Shreshtha,5,Prithvi Raj;Kabeer Rohilla,6,Prithvi Raj;Raghubir Sharma,6,Prithvi Raj"],
+["Smart Career Planner","Generative AI","Asks about hobbies and favourite subjects, suggests matching careers and what to study, and has an AI Career Helper chatbot.","Anant Kapoor,6,Ajay Pal;Shaurya Jain,4,Ajay Pal;Tavish Agarwal,6,Ajay Pal;Kartikay Meena,6,Ajay Pal"]
+],
+middle:[
+["Aqua Sentinel","Computer Vision","An underwater robot that spots and collects waste from rivers and ponds, samples water and zones water bodies by pollution level without harming aquatic life.","Ayushman Agarwal,8,Ajmer;Trinav Nemani,8,Bharatpur;Manan Agarwal,8,Rajasthan"],
+["AquaVision AI","Computer Vision","A web app that analyses water photos for visible pollution and gives a cleanliness estimate. Supports SDG 6.","Reyansh Mittal,7,Oman;Vivaan Chopda,7,Oman;Raghvendra Punia,7,Oman"],
+["ATLAS – Adaptive Traffic Light Automation System","Computer Vision","A YOLO model classifies vehicles and gives each lane green time by weighted count, cutting waiting time and fuel use. ESP32 drives the signals.","Aarav Dugar,9,Bharatpur;Suryaansh Choukhany,9,Jodhpur;Pratyush Dalmia,9,Kashmir"],
+["BrickVision","Computer Vision","Grades clay bricks into six classes from photos plus weight and size, rating each Accept, Review or Reject for consistent quality.","Dhruv Maheshwari,8,Ajmer;Shoaib Ansari,12,BT"],
+["EcoGen AI","Computer Vision","A website using generative AI to help people and companies cut waste and save paper, water and electricity. Supports SDGs 12 and 13.","Ridhaan Bansal,7,Oman;Aariav Puri,7,Oman"],
+["FaceVote AI","Computer Vision","Facial verification for school council and club elections: shorter queues, fewer counting mistakes and quick eligibility checks.","Sourya Tulshyan,7,Oman;Akash Rawat,7,Oman"],
+["Infra Dossier","Computer Vision","Compares electricity, water, internet and transport across regions using public data and highlights underserved areas. Supports SDG 9.","Yuval Jareda,8,Ajmer;Samaraditya Khangarot,8,Jaipur;Dhruv Agarawal,8,Jaipur"],
+["Operation BioPulse","Computer Vision","Edge-AI cameras in boarding schools spot early signs of illness such as eye redness and fever, then trigger a Poka-Yoke response in the affected wing.","Susaan Kumar Singh,7,Oman;Aariketh Banka,7,Oman"],
+["Sentinel Drive","Computer Vision","A small self-driving car on a Raspberry Pi that detects lanes, reads traffic signs and lights, and stops for obstacles.","Sumit Agrawal,8,Bharatpur;Arav Baruah,8,Colvin"],
+["Traffic Guard","Computer Vision","Spots vehicles crossing the stop line on red, tracks repeat offenders and demonstrates SMS alerts to owners. Tested on a simulated road.","Aarav Chirania,8,Jaipur;Shreyansh Sharma,8,Jaipur;Reyansh Singh,8,Kashmir"],
+["12 Lessons Before Midnight","Deep Learning","A 2D Social Studies game that blends a mystery story with 12 lessons and an AI helper called ARI who gives hints.","Vihaan Gupta,7,Oman;Bhavya Nyati,7,Oman;Kaavish Chauhan,7,Oman"],
+["Mind Behind Music","Deep Learning","Understands emotional state from the audio itself and listening behaviour such as skips and replays, tracking mood in real time.","Darsh Bansal,9,Bharatpur;Shoaib Ansari,12,BT"],
+["NutriPlan AI","Deep Learning","Personalised daily nutrition charts from weight, height, age and activity using the Mifflin-St Jeor equation, adapted to goals like muscle gain.","Susaan Kumar Singh,7,Oman;Aariketh Banka,7,Oman;Shuban Dutta,7,Oman"],
+["Campus AI","Generative AI","“Your Campus. Your Copilot.” A student assistant for concepts, revision notes, problem solving and verified campus information.","Divyam Sarawgi,8,BT;Vihaan Tak,8,BT"],
+["desky – Agentic AI on Your Desk","Generative AI","A Raspberry Pi AI agent that completes tasks, working with files, web search and email, safely isolated from the user’s main computer.","Aarav Dugar,9,Bharatpur;Suryaansh Choukhany,9,Jodhpur"],
+["Hope AI","Generative AI","A financial-literacy assistant that explains money concepts and helps with budgeting, expense tracking and saving habits.","Veydant Mittal,7,Oman;Ipshit Agrawal,7,Oman"],
+["Nexora AI","Generative AI","Turns school notices and assignment briefs into simple steps and study plans, and flags unclear info instead of inventing deadlines. Supports SDG 4.","Kovid Mittal,8,Kashmir;Naksh Nahar,8,Kashmir;Maneet Singh Wanaik,8,Kashmir"],
+["SDG Heroes","Generative AI","A game app teaching the UN Sustainable Development Goals through mini-games and tasks on pollution, poverty and climate change.","Dhanish Sahi,7,Oman;Vihaan Naidu,7,Oman;Debaditya Samanta,7,Oman"],
+["AI-Based Spam Message Detection System","Machine Learning","A Python model that classifies a text message as spam or not spam, flagging misleading ads, suspicious links and fraud.","Mrugank Sumera,8,BT;Shoaib Ansari,8,BT"],
+["CASCADE","Machine Learning","Simulates how an urban disaster cascades, from heavy rain to flooding to hospital strain, and ranks cost-effective interventions using live weather and quake data.","Rewat Pratap Jhalamand,8,Rajasthan;Samarth Lakra,8,BT"],
+["How Can We Use AI in Business Decision-Making?","Machine Learning","Explores how AI and data analytics can help businesses spot patterns, predict trends, manage inventory and reduce risk.","Anhad Singh Bhatia,9,Bharatpur;Agastya Agrawal,9,BT"],
+["Is This Mushroom Poisonous?","Machine Learning","A Decision Tree model that classifies mushrooms as edible or poisonous, with a tree diagram to explain predictions. For education only.","Arshveer Chawla,9,BT;Granth Diwan,9,Colvin"],
+["Linguistic Bias in AI","Machine Learning","Tests whether AI toxic-comment detectors wrongly flag harmless informal language more often than formal language.","Viraaj Jain,9,Jaipur;Labhesh Kaushik,9,Ajmer"],
+["NutriRoute","Machine Learning","Links surplus food with people who need meals, estimating demand and planning delivery routes. Supports SDGs 2 and 12.","Ishan Agarwal,8,Kashmir;Arnav Data,8,Kashmir"],
+["Seva – Charity Discovery Platform","Machine Learning","A directory to find genuine charities across India by state, city and cause, with links to official donation pages.","Yagyapratap Rathore,7,Oman;Veer Sah,7,Oman"],
+["SignSpeak","Machine Learning","Recognises Indian Sign Language hand signs with a webcam, shows the word on screen and speaks it aloud.","Anshveer Singh,7,Oman;Tarun Sharma,7,Oman"],
+["EcoByte Neo","Natural Language Processing","A mobile robot that detects leaks and continuous water flow in homes and schools and warns with a display and buzzer.","Rudra Bahl,7,Oman;Vivan Agarwal,7,Oman"],
+["Healthier-AI","Natural Language Processing","A multilingual health assistant giving non-emergency triage in 600+ dialects, with camera scans, nearby clinics, first-aid guides and reminders.","Pratyush Dalmia,9,Kashmir;Darsh Agarwal,9,Kashmir"],
+["Shadowverse Game","Others","A neon gaming dashboard where players earn XP, complete missions and unlock hunter ranks, built with JavaScript.","Harshvardhan Kuldeep,7,Oman;Siddid Kakkar,7,Oman;Tejas Goel,7,Oman"],
+["WaterWise","Others","A public site where people report water wastage with photos and earn points on house and city leaderboards after moderator review.","Niramay Singh,7,Oman;Aniruddha Singh,7,Oman;Divit Gupta,7,Oman"],
+["AI Forest Shield X","Robotics","A low-cost offline rover for early warning of forest fires and illegal logging, using YOLOv8 to detect flames, smoke and people. About ₹6,000–7,000.","Jayesh Garg,7,Oman;Avik Piplani,7,Oman;Yohaan Jain,7,Oman"],
+["AI LeafClean Bot","Robotics","Spots fallen leaves in gardens, vacuums them up and carries them to a composting area.","Aarav Gupta,7,Oman;Shaurya Shah,7,Oman;Vedansh Goyal,7,Oman"],
+["AutoLight Guardian","Robotics","An Arduino system that saves energy in hostel rooms by switching lights automatically using a motion sensor and clock.","Aarav Gupta,7,Oman;Shaurya Shah,7,Oman"],
+["EnviroGuard","Robotics","An Arduino monitor for temperature, humidity and gas levels with an LCD display; data storage and alerts are planned.","Navansh Goel,9,Kashmir;Labhesh Kaushik,9,Ajmer;Avyukt Bhardwaj,9,Bharatpur"],
+["MediBot 3.0 (Hospital Assistant)","Robotics","A healthcare robot that navigates autonomously, avoids obstacles and carries medicines and supplies, easing hospital workload.","Harshvardhan Kuldeep,7,Oman;Siddid Kakkar,7,Oman;Tejas Goel,7,Oman"],
+["MediBot 3.0 (Medical Assistant)","Robotics","A 3-foot ESP32 medical-assistant robot built for under ₹5,000, with LED eyes, an OLED display and a medical-supply compartment.","Siddid Kakkar,7,Oman;Tejas Goel,7,Oman;Anshveer Singh,7,Oman"],
+["Silent Thunder","Robotics","A device that converts vibration into usable electricity, designed to cost under ₹2,500 and be easy to install.","Garv Chirania,7,Oman;Aryaman Y. Singh,7,Oman;Kartikeya Shankar Pandey,7,Oman"],
+["CareerX","Not specified","An AI career assistant that recommends occupations and vacancies with a match percentage, finds skill gaps and helps with CVs and interviews.","Tanmay Joshi,7,Oman;Kumar Viraj Bhawani Singh,7,Oman;Meghan Jain,7,Oman"]
+],
+senior:[
+["JAY – The Everything AI","Computer Vision","A public AI kiosk that answers questions, gives directions and talks by voice, with Indian Sign Language recognition and offline essentials.","Satyaj Singh,11,Colvin;Akash Deep Rawat,11,Colvin"],
+["Sense Sight AI","Computer Vision","An assistive vision system that speaks the names and positions of nearby objects for visually impaired people.","Aarav Sharma,10,Jaipur;Aakash Rawat,10,Jaipur"],
+["TherapySafe","Computer Vision","Screens videos for distressing content before therapy use, rating each SAFE, CAUTION or UNSAFE with timestamped alerts.","Daivik Kedia,11,Jodhpur"],
+["Virasat: AI That Maps Damage on Heritage Buildings in 3D","Computer Vision","Turns a walk-around video into a 3D model and maps cracks, damp and missing stone so conservators see where a building is failing.","Samvidh Mehta,11,Bharatpur"],
+["Insightly","Generative AI","An AI learning platform with a 3D Smart Classroom and a Marks Intelligence System that predicts important exam topics.","Aarav Gupta,10,Jaipur;Sarthak Kedia,10,BT;Harshvardhan Bajaj,10,Rajasthan"],
+["Acoustic Drone Detection System","Machine Learning","Detects drones by the sound of their motors, separating them from background noise, with a live dashboard.","Suhaan Modi,11,Ajmer;Shahreyar Singh Gupta,11,Bharatpur"],
+["SafeRide","Machine Learning","A dashboard device for rideshare safety that detects screams, crashes or off-route movement and alerts emergency contacts with live location.","Sanskar Agrawal,10,BT;Chinmaya Sharma,10,Rajasthan;Pranit Jain,10,BT"],
+["ChurnSense","Not specified","Upload a dataset and predict whether people in similar situations are likely to leave a school or business.","Reyaansh Lohia,10,Rajasthan;Anish Daga,10,Colvin;Arjun Rao,10,Colvin"],
+["Fresh IQ","Not specified","A web app that recognises vegetables, estimates shelf life, flags spoilage risk and suggests recipes to cut household food waste.","Drishan Prithany,10,BT;Rishit Kalia,10,Ajmer;Nathan Xavier,10,Ajmer"]
+]};
+const META={junior:{name:"Junior Category",grades:"Grades 4–6",ico:"sprout"},middle:{name:"Middle Category",grades:"Grades 7–9",ico:"cpu"},senior:{name:"Senior Category",grades:"Grades 10–12",ico:"rocket"}};
+const CATS={};for(const k in META)CATS[k]={...META[k],items:RAW[k].map(r=>({title:r[0],area:r[1],desc:r[2],team:r[3].split(";").map(m=>m.split(",")),win:!!r[4]}))};
+const FILT={junior:"all",middle:"all",senior:"all"};
+const PAST={
+ 2025:[["Senior","AI-Powered Crop Disease Detection","Jivin Kasera (Raj)"],["Middle","Insightly","Sarthak Kedia, Medhanshveer Singh Mann, Aarav Gupta"],["Junior","Face Recognition Attendance System","Ahetsham Singh, Shuban Sunildutta, Abhishek Jain"]],
+ 2024:[["Senior","Crop Disease Detection & Treatment Recommendation","Sourish Suri (Colvin)"],["Middle","Intelligent Pothole System","Jivin Kasera (Raj)"],["Junior","Posture Detection","Yug Janghu (Ajay Pal), Pranit Vashistha (Prithvi Raj)"]]
+};
+const LINKS_CLICKABLE=false; // true = tappable links (visitors could leave the kiosk page)
+const LINKS=[
+ ["AI Lab – Mayo College","https://www.mayocollege.com/AI-lab"],
+ ["Kaizen Award – Mayo Old Boys’ Society","https://www.mayoobs.com/kaizen"],
+ ["Kapuria Centre of Excellence for AI & Robotics","https://www.mayoobs.com/contributions/kapuria-center"],
+ ["Mayo 150th Anniversary","https://www.mayoobs.com/mayo-150th-event"],
+ ["Giving Back – Alumni Contributions","https://www.mayoobs.com/giving-back"]
+];
+const DEV_CREDIT="Naitik Mundra"; // shown in the footer
+const STATS={projects:56,students:131};
+const IDLE_SECONDS=90;
+
+/* ===== ENGINE ===== */
+const $=s=>document.querySelector(s), view=$("#view"), esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const ini=n=>n.split(" ").filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase();
+
+/* Line icons (replace emojis) */
+const ICONS={
+ sprout:'<path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/>',
+ cpu:'<rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M9 2v2M15 2v2M9 20v2M15 20v2M2 9h2M2 15h2M20 9h2M20 15h2"/>',
+ rocket:'<path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"/><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"/><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/>',
+ flask:'<path d="M10 2v7.5a2 2 0 0 1-.2.9L4.7 20.5a1 1 0 0 0 .9 1.5h12.8a1 1 0 0 0 .9-1.5L14.2 10.4a2 2 0 0 1-.2-.9V2"/><path d="M8.5 2h7"/><path d="M7 16h10"/>',
+ trophy:'<path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2z"/>',
+ bulb:'<path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/>',
+ user:'<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/>',
+ landmark:'<path d="M3 22h18"/><path d="M6 18v-7M10 18v-7M14 18v-7M18 18v-7"/><path d="M12 2 3 8h18z"/>',
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ dice:'<rect x="3" y="3" width="18" height="18" rx="3"/><g fill="currentColor" stroke="none"><circle cx="8.5" cy="8.5" r="1.2"/><circle cx="15.5" cy="8.5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="8.5" cy="15.5" r="1.2"/><circle cx="15.5" cy="15.5" r="1.2"/></g>'
+};
+const ic=n=>`<svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`;
+
+const PHOTO="https://www.mayocollege.com/home/images/pro-";
+const av=(n,i)=>`<div class="av">${i?`<img src="${PHOTO}${i}.png" alt="${esc(n)}" onerror="this.replaceWith(document.createTextNode('${ini(n)}'))">`:ini(n)}</div>`;
+const card=(h,ico,t,p,tag)=>`<button class="card" data-go="${h}">${tag?`<span class="tag">${tag}</span>`:""}<span class="ico">${ic(ico)}</span><h3>${t}</h3><p>${p}</p></button>`;
+
+const ALL=[];for(const k in CATS)CATS[k].items.forEach((w,i)=>ALL.push({k,i,w}));
+const loc=t=>{const x=ALL.find(o=>o.w.title.startsWith(t));return x?`p-${x.k}-${x.i}`:"home"};
+const chipBtn=o=>`<button class="btn" data-go="p-${o.k}-${o.i}">${esc(o.w.title)}</button>`;
+function labInit(){
+ view.querySelectorAll("[data-n]").forEach(el=>{const n=+el.dataset.n,t0=performance.now();(function f(t){const q=Math.min(1,(t-t0)/1200);el.textContent=Math.round(n*(1-Math.pow(1-q,3)));if(q<1)requestAnimationFrame(f)})(t0)});
+ const steps=[["Spot a problem worth fixing.","Fresh IQ","It starts from a real problem: food wasted in households."],["Build a small version and try it.","Sentinel Drive","A self-driving car prototype built on affordable hardware."],["Test it honestly.","Traffic Guard","Tested on a simulated road, and it verifies a violation before confirming it."],["Improve, then go round again.","EnviroGuard","Reliable operation first, with data storage, alerts and AI analysis planned for later versions."]];
+ const out=$("#pdcaOut"),sb=[...view.querySelectorAll("[data-step]")];
+ const showStep=i=>{sb.forEach((b,j)=>b.classList.toggle("solid",j===i));const t=steps[i];out.innerHTML=`<p class="q">${t[0]}</p><p>${t[2]}</p><button class="btn" data-go="${loc(t[1])}">See ${esc(t[1])} →</button>`};
+ sb.forEach((b,i)=>b.onclick=()=>showStep(i));showStep(0);
+ const cnt={};ALL.forEach(o=>cnt[o.w.area]=(cnt[o.w.area]||0)+1);
+ const rows=Object.entries(cnt).sort((a,b)=>b[1]-a[1]),mx=rows[0][1];
+ $("#areas").innerHTML=rows.map(([a,c])=>`<button class="bar" data-area="${esc(a)}"><span class="bl">${esc(a)}</span><span class="bt"><i data-w="${c/mx*100}"></i></span><span class="bc">${c}</span></button>`).join("");
+ const ab=[...view.querySelectorAll("[data-area]")];
+ const showArea=a=>{ab.forEach(b=>b.classList.toggle("on",b.dataset.area===a));const l=ALL.filter(o=>o.w.area===a);$("#areaOut").innerHTML=`<p class="q" style="margin-bottom:.6rem">${esc(a)} · ${l.length} projects</p><div class="chips">${l.map(chipBtn).join("")}</div>`};
+ ab.forEach(b=>b.onclick=()=>showArea(b.dataset.area));showArea(rows[0][0]);
+ const hs={};ALL.forEach(o=>o.w.team.forEach(m=>(hs[m[2]]=hs[m[2]]||new Set()).add(m[0])));
+ const hr=Object.entries(hs).map(([h,x])=>[h,x.size]).sort((a,b)=>b[1]-a[1]);
+ $("#houses").innerHTML=hr.map(([h,c])=>`<div class="bar static"><span class="bl">${esc(h)}</span><span class="bt"><i data-w="${c/hr[0][1]*100}"></i></span><span class="bc">${c}</span></div>`).join("");
+ setTimeout(()=>view.querySelectorAll("i[data-w]").forEach(i=>i.style.width=i.dataset.w+"%"),60);
+ $("#spin").onclick=()=>{let n=0;const o=$("#spinOut"),t=setInterval(()=>{const r=ALL[Math.random()*ALL.length|0];if(++n>12){clearInterval(t);o.innerHTML=`<span class="tag">Your pick</span><h3>${esc(r.w.title)}</h3><p style="color:var(--soft)">${esc(r.w.desc)}</p><button class="btn" data-go="p-${r.k}-${r.i}">Meet the team →</button>`}else o.innerHTML=`<h3 class="spinning">${esc(r.w.title)}</h3>`},90)};
+ view.querySelectorAll(".fl").forEach(c=>c.onclick=()=>c.classList.toggle("on"));
+ $("#muda").innerHTML=["Fresh IQ","NutriRoute","EcoGen AI","WaterWise","EcoByte Neo","AI LeafClean Bot","AutoLight Guardian","Silent Thunder"].map(t=>ALL.find(o=>o.w.title.startsWith(t))).filter(Boolean).map(chipBtn).join("");
+}
+const pages={
+ home(){return{t:"Kaizen Award 2026",h:`
+  <p class="lead">Kapuria Award for Innovation Excellence — celebrating student innovation in AI and Robotics at Mayo College. Explore every project and meet the students who built them.</p>
+  <section class="sec"><h2 class="sh">Projects</h2>
+   <div class="grid big">
+    ${card("cat-junior",CATS.junior.ico,"Junior Projects",CATS.junior.grades+" · "+CATS.junior.items.length+" projects")}
+    ${card("cat-middle",CATS.middle.ico,"Middle Projects",CATS.middle.grades+" · "+CATS.middle.items.length+" projects")}
+    ${card("cat-senior",CATS.senior.ico,"Senior Projects",CATS.senior.grades+" · "+CATS.senior.items.length+" projects")}
+   </div></section>
+  <section class="sec"><h2 class="sh">Discover</h2>
+   <div class="grid">
+    ${card("lab","flask","Kaizen Lab","Interactive data, ideas and surprises")}
+    ${card("past","trophy","Past Winners","2024 and 2025 champions")}
+    ${card("about","bulb","About the Award","What KAIZEN stands for and why it exists")}
+    ${card("founder","user","Deep Kapuria","The alumnus behind the award")}
+    ${card("centre","landmark","The Centre","Inside K-Infinity, the Human-Centric CoE")}
+    ${card("timeline","clock","Timeline","From 1875 to the AI centre today")}
+   </div></section>
+  </div>`}},
+ lab(){return{t:"Kaizen Lab",init:labInit,h:`
+  <p class="lead">The Kaizen Award, explored. Tap, spin and flip your way through the ideas behind the projects.</p>
+  <section class="sec"><h2 class="sh">By the numbers</h2><div class="grid">
+   <div class="card static stat"><b class="num" data-n="${ALL.length}">0</b><span>Projects</span></div>
+   <div class="card static stat"><b class="num" data-n="${STATS.students}">0</b><span>Students</span></div>
+   <div class="card static stat"><b class="num" data-n="3">0</b><span>Categories</span></div>
+   <div class="card static stat"><b class="num" data-n="${new Set(ALL.map(o=>o.w.area)).size}">0</b><span>Project areas</span></div></div></section>
+  <section class="sec"><h2 class="sh">Kaizen <span class="kj">改善</span> · “change for the better”</h2><div class="panel">
+   <p>Kai (change) + zen (good). Small improvements, made constantly, by everyone. Tap a step of the cycle to see a real student project living it.</p>
+   <div class="chips" style="margin:.8rem 0">${["Plan","Do","Check","Act"].map((n,i)=>`<button class="btn" data-step="${i}">${i+1} · ${n}</button>`).join("")}</div><div id="pdcaOut" style="display:grid;gap:.7rem;justify-items:start"></div></div></section>
+  <div class="cols">
+   <section class="sec"><h2 class="sh">What are students building? Tap a bar</h2><div class="panel"><div id="areas"></div><div id="areaOut" style="margin-top:.8rem"></div></div></section>
+   <section class="sec"><h2 class="sh">Students per house</h2><div class="panel" id="houses"></div></section>
+  </div>
+  <section class="sec"><h2 class="sh">Surprise me</h2><div class="panel" style="display:grid;gap:.8rem;justify-items:start"><button class="btn solid" id="spin">${ic("dice")} Pick a random project</button><div id="spinOut" style="display:grid;gap:.5rem;justify-items:start"></div></div></section>
+  <section class="sec"><h2 class="sh">Did you know? Tap to flip</h2><div class="grid">
+   <button class="card fl"><small>Question</small><h3 class="f">What does KAIZEN mean?</h3><p class="b">改善, kai (change) + zen (good): “change for the better”. Constant small improvements by everyone, not rare big overhauls.</p></button>
+   <button class="card fl"><small>Question</small><h3 class="f">Where did it start?</h3><p class="b">In post-war Japanese quality circles at Toyota. Masaaki Imai’s 1986 book, <i>Kaizen: The Key to Japan’s Competitive Success</i>, took it worldwide.</p></button>
+   <button class="card fl"><small>Question</small><h3 class="f">What is Poka-Yoke?</h3><p class="b">“Mistake-proofing”, formalised by Shigeo Shingo at Toyota in the 1960s. Operation BioPulse uses a Poka-Yoke response when its cameras spot early signs of illness.</p></button>
+   <button class="card fl"><small>Question</small><h3 class="f">Who is Kaizen’s enemy?</h3><p class="b">Muda, the Japanese word for waste: anything that uses resources without adding value. Meet the students fighting it below.</p></button></div></section>
+  <section class="sec"><h2 class="sh">Muda hunters · projects fighting waste</h2><div class="chips" id="muda"></div></section>`}},
+ about(){return{t:"About the Award",h:`
+  <p class="q">KAIZEN — the Kapuria Award for Innovation Excellence.</p>
+  <div class="cols">
+   <div class="panel"><h3>Objective</h3><p>To promote student innovation in Robotics and AI, including Natural Language Processing, Deep Learning, Computer Vision and Machine Learning.</p><p>To cultivate a culture of innovation and forward thinking, inspiring students to design human-centric solutions using AI and Robotics.</p></div>
+   <div class="panel"><h3>Who is recognised</h3><p>Outstanding students who show creativity and innovation, in three categories: Junior (Grades 4–6), Middle (Grades 7–9) and Senior (Grades 10–12). Teachers who inspire and guide them are honoured too, through the iTech Award.</p></div>
+   <div class="panel"><h3>This year</h3><p>${STATS.projects} projects from ${STATS.students} students. Generative AI, Computer Vision and Machine Learning were the most popular areas.</p><div class="chips" style="margin-top:.8rem"><span class="chip">Generative AI</span><span class="chip">Computer Vision</span><span class="chip">Machine Learning</span><span class="chip">Deep Learning</span><span class="chip">NLP</span><span class="chip">Robotics</span></div></div>
+   <div class="panel"><h3>iTech Award for Teachers</h3><p>The Deep Kapuria Teacher’s Award: Ms. Tripti Pareek (2023–24) and Ms. Priyanka Shaktawat (2024–25).</p></div>
+  </div>`}},
+ founder(){return{t:"Deep Kapuria",h:`
+  <section class="hero">
+   <img src="https://static.wixstatic.com/media/f778f5_3e5bc8ef3ec7478bb9e3667cfd670712~mv2.png/v1/fill/w_410,h_410,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/image.png" alt="Deep Kapuria" onerror="this.outerHTML='<div class=ph>DK</div>'">
+   <div class="txt">
+    <span class="role">Founder of the KAIZEN Award</span>
+    <h2>Deep Kapuria</h2>
+    <div class="chips"><span class="chip">Mayo College alumnus · Batch of 1966</span><span class="chip">Chairman, Hi-Tech Group</span><span class="chip">Robotics &amp; AI</span></div>
+    <p class="q">Technology as a catalyst for positive change, enhancing human capabilities and addressing poverty, hunger and climate change.</p>
+   </div>
+  </section>
+  <div class="cols">
+   <div class="panel"><h3>The person</h3>
+    <p>An accomplished entrepreneur and Chairman of the Hi-Tech Group, a global leader in Robotics and Artificial Intelligence. He has also chaired the CII National Committee on Robotics.</p>
+    <p>A member of the Mayo College Batch of 1966, he gave back to his school with the Kapuria Centre of Excellence for AI &amp; Robotics, the KAIZEN Award for students and the iTech Award for teachers.</p></div>
+   <div class="panel"><h3>His gifts to Mayo</h3>
+    <ul class="tl"><li><b>2023</b><br>Human-Centric CoE of Robotics &amp; AI launched (6 April)</li><li><b>2024</b><br>First KAIZEN Awards and iTech Teacher’s Award</li><li><b>2025</b><br>Kapuria Centre of Excellence inaugurated (27 November)</li></ul></div>
+  </div>
+  <div class="grid"><button class="card" data-go="about"><span class="ico">${ic("bulb")}</span><h3>About the Award</h3><p>What KAIZEN stands for</p></button><button class="card" data-go="centre"><span class="ico">${ic("landmark")}</span><h3>The Centre</h3><p>Inside the CoE and its committee</p></button></div>`}},
+ centre(){return{t:"The Centre",h:`
+  <p class="lead">The Human-Centric Centre of Excellence for AI &amp; Robotics gives Mayo students hands-on, ethics-first experience building technology for people.</p>
+  <div class="cols">
+   <div class="panel"><h3>Vision</h3><p>To foster a new generation of innovators and thought leaders in AI and Robotics, rooted in ethical principles and committed to global challenges — including the Sustainable Development Goals.</p></div>
+   <div class="panel"><h3>Mission</h3><p>An enriching AI and Robotics education for Grades 10–12, with an ethical framework inspired by ancient wisdom, hands-on projects and human-centric solutions, in collaboration with industry experts and global thinkers.</p></div>
+   <div class="panel"><h3>CoE 2.0 Steering Committee</h3>
+    ${["Deep Kapuria","Jaideep Singh","Jaideep Samarth","Krishna Chandra Verma","Sharad Bhandari"].map((n,i)=>`<div class="person">${av(n,i+1)}<b>${n}</b></div>`).join("")}
+    <p style="margin-top:.6rem"><span style="color:var(--soft)">Coordinator:</span> Mr Akash Deep Rawat</p></div>
+   <div class="panel"><h3>Learn more</h3>${LINKS.map(l=>`<div class="person"><div><b>${l[0]}</b><span>${LINKS_CLICKABLE?`<a href="${l[1]}" target="_blank" rel="noopener" style="color:var(--gold)">${l[1].replace("https://","")}</a>`:l[1].replace("https://","")}</span></div></div>`).join("")}</div>
+  </div>`}},
+ timeline(){return{t:"Timeline",h:`
+  <ul class="tl panel">
+   <li><b>1875</b><br>Mayo College founded in Ajmer with the motto “Let there be Light”.</li>
+   <li><b>6 April 2023</b><br>Human-Centric CoE of Robotics &amp; AI launched.</li>
+   <li><b>2024</b><br>First KAIZEN Award certificates and medals presented.</li>
+   <li><b>27 November 2025</b><br>Kapuria Centre of Excellence for AI &amp; Robotics inaugurated during Mayo’s 150th anniversary celebrations (27–30 Nov).</li>
+   <li><b>2026</b><br>${STATS.projects} projects from ${STATS.students} students compete for the KAIZEN Award.</li>
+  </ul>`}},
+ past(){return{t:"Past Winners",h:`<div class="cols">${Object.keys(PAST).sort().reverse().map(y=>`<div class="panel"><h3>Kaizen ${y}</h3>${PAST[y].map(r=>`<div class="person"><div class="av">${r[0][0]}</div><div><b>${esc(r[1])}</b><span>${r[0]} · ${esc(r[2])}</span></div></div>`).join("")}</div>`).join("")}</div>`}}
+};
+
+function catPage(k){const c=CATS[k],hasW=c.items.some(w=>w.win);
+ let f=FILT[k];if(f==="win"&&!hasW)f="all";
+ const areas=[...new Set(c.items.map(w=>w.area))];
+ const chips=[...(hasW?[["win","★ Winners"]]:[]),["all","All ("+c.items.length+")"],...areas.map(a=>[a,a])];
+ const list=c.items.map((w,i)=>({w,i})).filter(({w})=>f==="all"||(f==="win"?w.win:w.area===f)).sort((x,y)=>y.w.win-x.w.win);
+ return{t:c.name+" · "+c.grades,h:`
+ <p class="lead">Tap a project to meet the team behind it.</p>
+ <div class="chips">${chips.map(([v,l])=>`<button class="btn" style="${v===f?"background:#fff;color:var(--bg)":""}" data-f="${k}|${esc(v)}">${esc(l)}</button>`).join("")}</div>
+ <div class="grid">${list.map(({w,i})=>`<button class="card" data-go="p-${k}-${i}">${w.win?'<span class="tag">★ Winner</span>':""}<span class="ico">${ic(c.ico)}</span><h3>${esc(w.title)}</h3><p>${esc(w.area)} · ${w.team.length} student${w.team.length>1?"s":""}</p></button>`).join("")}</div>`}}
+function projPage(k,i){const w=CATS[k].items[i];return{t:w.title,h:`
+ <div class="chips"><span class="chip">${CATS[k].name}</span><span class="chip">${esc(w.area)}</span>${w.win?'<span class="tag">★ Winner</span>':""}</div>
+ <div class="cols"><div class="panel"><h3>About the project</h3><p style="font-size:1.15rem">${esc(w.desc)}</p></div>
+ <div class="panel"><h3>The team</h3>${w.team.map(m=>`<div class="person"><div class="av">${ini(m[0])}</div><div><b>${esc(m[0])}</b><span>Class ${esc(m[1])} · ${esc(m[2])}</span></div></div>`).join("")}</div></div>`}}
+
+let stack=[];
+function route(){
+ const h=(location.hash||"#home").slice(1);let p,m;
+ if(pages[h])p=pages[h]();
+ else if(m=h.match(/^cat-(\w+)$/))p=CATS[m[1]]&&catPage(m[1]);
+ else if(m=h.match(/^p-(\w+)-(\d+)$/))p=CATS[m[1]]&&CATS[m[1]].items[m[2]]&&projPage(m[1],+m[2]);
+ if(!p){location.hash="home";return}
+ /* navigation history: Back returns to the page you actually came from */
+ if(h==="home")stack=["home"];
+ else if(stack[stack.length-1]!==h){
+  if(stack.length>1&&stack[stack.length-2]===h)stack.pop();
+  else{stack.push(h);if(stack.length>40)stack.shift()}
+ }
+ $("#title").textContent=p.t;document.title=p.t+" · Kaizen Kiosk";
+ view.style.animation="none";view.offsetHeight;view.style.animation="";
+ view.innerHTML=p.h;scrollTo(0,0);p.init&&p.init();
+ const home=h==="home";$("#back").disabled=home;$("#home").disabled=home;
+}
+document.addEventListener("click",e=>{const f=e.target.closest("[data-f]");if(f){const[k,v]=f.dataset.f.split("|");FILT[k]=v;route();return}const b=e.target.closest("[data-go]");if(b)location.hash=b.dataset.go});
+$("#home").onclick=()=>location.hash="home";
+$("#back").onclick=()=>{
+ if(stack.length>1){stack.pop();location.hash=stack[stack.length-1]}
+ else{const m=location.hash.slice(1).match(/^p-(\w+)-/);location.hash=m?"cat-"+m[1]:"home"}
+};
+const modal=$("#modal"),closeM=()=>modal.hidden=true;
+$("#credit").onclick=()=>modal.hidden=false;
+$("#mclose").onclick=closeM;
+modal.addEventListener("click",e=>{if(e.target===modal)closeM()});
+addEventListener("keydown",e=>{if(e.key==="Escape")closeM()});
+addEventListener("hashchange",closeM);
+$("#credit").textContent="Designed & developed by "+DEV_CREDIT;
+addEventListener("hashchange",route);route();
+
+/* Idle reset + kiosk hardening */
+let idle;const rst=()=>{clearTimeout(idle);idle=setTimeout(()=>{closeM();if(location.hash&&location.hash!=="#home")location.hash="home"},IDLE_SECONDS*1000)};
+["pointerdown","touchstart","keydown"].forEach(ev=>addEventListener(ev,rst,{passive:true}));rst();
+addEventListener("contextmenu",e=>e.preventDefault());
+</script>
+</body>
+</html>
