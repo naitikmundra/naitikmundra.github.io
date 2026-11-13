@@ -352,28 +352,33 @@ function projPage(k,i){const w=CATS[k].items[i];return{t:w.title,h:`
  <div class="cols"><div class="panel"><h3>About the project</h3><p style="font-size:1.15rem">${esc(w.desc)}</p></div>
  <div class="panel"><h3>The team</h3>${w.team.map(m=>`<div class="person"><div class="av">${ini(m[0])}</div><div><b>${esc(m[0])}</b><span>Class ${esc(m[1])} · ${esc(m[2])}</span></div></div>`).join("")}</div></div>`}}
 
-let stack=[];
+let stack=[],cur=null,pos={},goingBack=false;
 function route(){
  const h=(location.hash||"#home").slice(1);let p,m;
  if(pages[h])p=pages[h]();
  else if(m=h.match(/^cat-(\w+)$/))p=CATS[m[1]]&&catPage(m[1]);
  else if(m=h.match(/^p-(\w+)-(\d+)$/))p=CATS[m[1]]&&CATS[m[1]].items[m[2]]&&projPage(m[1],+m[2]);
  if(!p){location.hash="home";return}
+ /* remember scroll of the page we are leaving */
+ if(cur)pos[cur]=scrollY;
+ const same=h===cur;let back=goingBack;goingBack=false;
  /* navigation history: Back returns to the page you actually came from */
- if(h==="home")stack=["home"];
+ if(h==="home"){stack=["home"];if(!back&&!same)pos={}}
  else if(stack[stack.length-1]!==h){
-  if(stack.length>1&&stack[stack.length-2]===h)stack.pop();
+  if(stack.length>1&&stack[stack.length-2]===h){stack.pop();back=true}
   else{stack.push(h);if(stack.length>40)stack.shift()}
  }
+ cur=h;
  $("#title").textContent=p.t;document.title=p.t+" · Kaizen Kiosk";
  view.style.animation="none";view.offsetHeight;view.style.animation="";
- view.innerHTML=p.h;scrollTo(0,0);p.init&&p.init();
+ view.innerHTML=p.h;p.init&&p.init();
+ const y=(back||same)?(pos[h]||0):0;scrollTo(0,y);if(y)requestAnimationFrame(()=>scrollTo(0,y));
  const home=h==="home";$("#back").disabled=home;$("#home").disabled=home;
 }
 document.addEventListener("click",e=>{const f=e.target.closest("[data-f]");if(f){const[k,v]=f.dataset.f.split("|");FILT[k]=v;route();return}const b=e.target.closest("[data-go]");if(b)location.hash=b.dataset.go});
 $("#home").onclick=()=>location.hash="home";
 $("#back").onclick=()=>{
- if(stack.length>1){stack.pop();location.hash=stack[stack.length-1]}
+ if(stack.length>1){goingBack=true;stack.pop();location.hash=stack[stack.length-1]}
  else{const m=location.hash.slice(1).match(/^p-(\w+)-/);location.hash=m?"cat-"+m[1]:"home"}
 };
 const modal=$("#modal"),closeM=()=>modal.hidden=true;
