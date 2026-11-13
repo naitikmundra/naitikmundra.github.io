@@ -86,6 +86,9 @@ h2{font-size:clamp(1.3rem,2.6vmin + .9rem,2.6rem);line-height:1.15}
 .demo{background:#b3261e;color:#fff;font-size:.7rem;padding:.15rem .5rem;border-radius:6px;font-weight:700;align-self:flex-start}
 .q{font-size:clamp(1.1rem,1.6vmin + .8rem,1.8rem);font-style:italic;color:var(--soft);border-left:4px solid var(--gold);padding-left:1rem}
 footer{padding:.6rem var(--pad);opacity:.85;border-top:1px solid var(--line);color:var(--soft);font-size:.75rem;display:flex;justify-content:space-between;align-items:center;text-align:center;gap:1rem;flex-wrap:wrap}
+#boot{position:fixed;inset:0;z-index:200;background:var(--bg);color:var(--soft);display:grid;place-content:center;justify-items:center;gap:1rem;font-size:1.1rem;letter-spacing:.06em}
+.ring{width:3rem;height:3rem;border:4px solid var(--line);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 @media (orientation:portrait){.grid.big{grid-template-columns:repeat(auto-fit,minmax(min(100%,22rem),1fr))}}
 @media (prefers-reduced-motion:reduce){main{animation:none}}
 </style>
@@ -94,6 +97,7 @@ footer{padding:.6rem var(--pad);opacity:.85;border-top:1px solid var(--line);col
 <header>
   <div class="brand"><small>K-Infinity · Kapuria Human-Centric Centre of Excellence for AI &amp; Robotics</small><h1 id="title">Kaizen Award</h1></div>
 </header>
+<div id="boot" role="status" aria-live="polite"><span class="ring"></span><span>Loading Kaizen Kiosk…</span></div>
 <main id="view"></main>
 <footer><span>Mayo College, Ajmer · Est. 1875</span><button id="credit" class="credit" type="button"></button><span>Touch any card to explore</span></footer>
 <nav class="dock" aria-label="Navigation"><button class="btn" id="back">← Back</button><button class="btn solid" id="home">⌂ Home</button></nav>
@@ -173,7 +177,7 @@ senior:[
 ["Fresh IQ","Not specified","A web app that recognises vegetables, estimates shelf life, flags spoilage risk and suggests recipes to cut household food waste.","Drishan Prithany,10,BT;Rishit Kalia,10,Ajmer;Nathan Xavier,10,Ajmer"]
 ]};
 const META={junior:{name:"Junior Category",grades:"Grades 4–6",ico:"sprout"},middle:{name:"Middle Category",grades:"Grades 7–9",ico:"cpu"},senior:{name:"Senior Category",grades:"Grades 10–12",ico:"rocket"}};
-const CATS={};for(const k in META)CATS[k]={...META[k],items:RAW[k].map(r=>({title:r[0],area:r[1],desc:r[2],team:r[3].split(";").map(m=>m.split(",")),win:!!r[4]}))};
+const CATS={};for(const k in META)CATS[k]={...META[k],items:RAW[k].map(r=>({title:r[0],area:r[1]==="Not specified"?"Others":r[1],desc:r[2],team:r[3].split(";").map(m=>m.split(",")),win:!!r[4]}))};
 const FILT={junior:"all",middle:"all",senior:"all"};
 const PAST={
  2025:[["Senior","AI-Powered Crop Disease Detection","Jivin Kasera (Raj)"],["Middle","Insightly","Sarthak Kedia, Medhanshveer Singh Mann, Aarav Gupta"],["Junior","Face Recognition Attendance System","Ahetsham Singh, Shuban Sunildutta, Abhishek Jain"]],
@@ -210,8 +214,18 @@ const ICONS={
 };
 const ic=n=>`<svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[n]}</svg>`;
 
+/* Images: preloaded + decoded before the UI appears */
 const PHOTO="https://www.mayocollege.com/home/images/pro-";
-const av=(n,i)=>`<div class="av">${i?`<img src="${PHOTO}${i}.png" alt="${esc(n)}" onerror="this.replaceWith(document.createTextNode('${ini(n)}'))">`:ini(n)}</div>`;
+const FOUNDER_IMG="https://static.wixstatic.com/media/f778f5_3e5bc8ef3ec7478bb9e3667cfd670712~mv2.png/v1/fill/w_410,h_410,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/image.png";
+const IMGS=[FOUNDER_IMG,...[1,2,3,4,5].map(i=>PHOTO+i+".png")];
+const imgOK={},KEEP=[];
+const preload=()=>Promise.all(IMGS.map(u=>new Promise(res=>{
+ const im=new Image();KEEP.push(im);
+ im.onload=()=>{imgOK[u]=true;(im.decode?im.decode():Promise.resolve()).catch(()=>{}).then(res)};
+ im.onerror=()=>{imgOK[u]=false;res()};
+ im.src=u;
+})));
+const av=(n,i)=>{const u=PHOTO+i+".png";return `<div class="av">${i&&imgOK[u]!==false?`<img src="${u}" alt="${esc(n)}" onerror="this.replaceWith(document.createTextNode('${ini(n)}'))">`:ini(n)}</div>`};
 const card=(h,ico,t,p,tag)=>`<button class="card" data-go="${h}">${tag?`<span class="tag">${tag}</span>`:""}<span class="ico">${ic(ico)}</span><h3>${t}</h3><p>${p}</p></button>`;
 
 const ALL=[];for(const k in CATS)CATS[k].items.forEach((w,i)=>ALL.push({k,i,w}));
@@ -287,7 +301,7 @@ const pages={
   </div>`}},
  founder(){return{t:"Deep Kapuria",h:`
   <section class="hero">
-   <img src="https://static.wixstatic.com/media/f778f5_3e5bc8ef3ec7478bb9e3667cfd670712~mv2.png/v1/fill/w_410,h_410,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/image.png" alt="Deep Kapuria" onerror="this.outerHTML='<div class=ph>DK</div>'">
+   ${imgOK[FOUNDER_IMG]===false?'<div class="ph">DK</div>':`<img src="${FOUNDER_IMG}" alt="Deep Kapuria" onerror="this.outerHTML='<div class=ph>DK</div>'">`}
    <div class="txt">
     <span class="role">Founder of the KAIZEN Award</span>
     <h2>Deep Kapuria</h2>
@@ -369,7 +383,10 @@ modal.addEventListener("click",e=>{if(e.target===modal)closeM()});
 addEventListener("keydown",e=>{if(e.key==="Escape")closeM()});
 addEventListener("hashchange",closeM);
 $("#credit").textContent="Designed & developed by "+DEV_CREDIT;
-addEventListener("hashchange",route);route();
+Promise.race([preload(),new Promise(r=>setTimeout(r,8000))]).then(()=>{
+ addEventListener("hashchange",route);route();
+ const b=$("#boot");b.remove();
+});
 
 /* Idle reset + kiosk hardening */
 let idle;const rst=()=>{clearTimeout(idle);idle=setTimeout(()=>{closeM();if(location.hash&&location.hash!=="#home")location.hash="home"},IDLE_SECONDS*1000)};
