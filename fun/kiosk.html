@@ -199,6 +199,35 @@ const IDLE_SECONDS=90;
 const $=s=>document.querySelector(s), view=$("#view"), esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ini=n=>n.split(" ").filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase();
 
+/* Student photos: put the files in a folder named "students" next to this HTML file.
+   Key = name exactly as written in RAW (use "Name|class" if two students share a name).
+   Students not listed here keep showing initials. */
+const STUDENT_DIR="img_kiosk/";
+const PIC={
+ "Aarav Gupta|10":"Aarav Gupta.jpg",
+ "Aarav Dugar":"aaravDugar.jpg",
+ "Aariketh Banka":"Aariketh Banka.JPG",
+ "Aniruddha Singh":"Aniruddha.jpg",
+ "Bhavya Nyati":"Bhavya.png",
+ "Chinmaya Sharma":"Chinmaya Sharma.jpeg",
+ "Drishan Prithany":"drishanPrithany.jpg",
+ "Navansh Goel":"navanshGoel.jpg",
+ "Pratyush Dalmia":"Pratyush Dalmia.jpeg",
+ "Rewat Pratap Jhalamand":"REWAT PRATAP SINGH.jpg",
+ "Samaraditya Khangarot":"Samaraditya.jpeg",
+ "Samarth Lakra":"SAMARTH LAKRA.jpeg",
+ "Sanskar Agrawal":"sanskarAgarwal.jpeg",
+ "Satyaj Singh":"satyaj.jpeg",
+ "Suhaan Modi":"SuhaanModi.jpeg",
+ "Suryaansh Choukhany":"Suryaansh Choukhany.jpg"
+ /* Files with no matching student in RAW yet (add a line when they're in the data):
+    Aashman Kumar.JPG, Abhirup Kaushik.JPG, Ahaan Tapariya.jpg, Anant Khubchandani.png,
+    Anay Natha.JPG, Anuj Rathi.jpeg, Arhaan Narang.jpeg, Arjun Khara.png,
+    Arjun Mittal.png, Armaan Meher.png, Aryav Garg.png */
+};
+const sav=m=>{const f=PIC[m[0]+"|"+m[1]]||PIC[m[0]];
+ return `<div class="av">${f?`<img src="${STUDENT_DIR}${encodeURIComponent(f)}" alt="${esc(m[0])}" loading="lazy" onerror="this.replaceWith(document.createTextNode('${ini(m[0])}'))">`:ini(m[0])}</div>`};
+
 /* Line icons (replace emojis) */
 const ICONS={
  sprout:'<path d="M7 20h10"/><path d="M10 20c5.5-2.5.8-6.4 3-10"/><path d="M9.5 9.4c1.1.8 1.8 2.2 2.3 3.7-2 .4-3.5.4-4.8-.3-1.2-.6-2.3-1.9-3-4.2 2.8-.5 4.4 0 5.5.8z"/><path d="M14.1 6a7 7 0 0 0-1.1 4c1.9-.1 3.3-.6 4.3-1.4 1-1 1.6-2.3 1.7-4.6-2.7.1-4 1-4.9 2z"/>',
@@ -350,7 +379,7 @@ function catPage(k){const c=CATS[k],hasW=c.items.some(w=>w.win);
 function projPage(k,i){const w=CATS[k].items[i];return{t:w.title,h:`
  <div class="chips"><span class="chip">${CATS[k].name}</span><span class="chip">${esc(w.area)}</span>${w.win?'<span class="tag">★ Winner</span>':""}</div>
  <div class="cols"><div class="panel"><h3>About the project</h3><p style="font-size:1.15rem">${esc(w.desc)}</p></div>
- <div class="panel"><h3>The team</h3>${w.team.map(m=>`<div class="person"><div class="av">${ini(m[0])}</div><div><b>${esc(m[0])}</b><span>Class ${esc(m[1])} · ${esc(m[2])}</span></div></div>`).join("")}</div></div>`}}
+ <div class="panel"><h3>The team</h3>${w.team.map(m=>`<div class="person">${sav(m)}<div><b>${esc(m[0])}</b><span>Class ${esc(m[1])} · ${esc(m[2])}</span></div></div>`).join("")}</div></div>`}}
 
 let stack=[],cur=null,pos={},goingBack=false;
 function route(){
