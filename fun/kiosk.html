@@ -187,9 +187,7 @@ const LINKS_CLICKABLE=false; // true = tappable links (visitors could leave the 
 const LINKS=[
  ["AI Lab – Mayo College","https://www.mayocollege.com/AI-lab"],
  ["Kaizen Award – Mayo Old Boys’ Society","https://www.mayoobs.com/kaizen"],
- ["Kapuria Centre of Excellence for AI & Robotics","https://www.mayoobs.com/contributions/kapuria-center"],
- ["Mayo 150th Anniversary","https://www.mayoobs.com/mayo-150th-event"],
- ["Giving Back – Alumni Contributions","https://www.mayoobs.com/giving-back"]
+ ["Kapuria Centre of Excellence for AI & Robotics","https://www.mayoobs.com/contributions/kapuria-center"]
 ];
 const DEV_CREDIT="Naitik Mundra"; // shown in the footer
 const STATS={projects:56,students:131};
@@ -199,7 +197,7 @@ const IDLE_SECONDS=90;
 const $=s=>document.querySelector(s), view=$("#view"), esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const ini=n=>n.split(" ").filter(Boolean).slice(0,2).map(w=>w[0]).join("").toUpperCase();
 
-/* Student photos: put the files in a folder named "students" next to this HTML file.
+/* Student photos: put the files in a folder named "img_kiosk" next to this HTML file.
    Key = name exactly as written in RAW (use "Name|class" if two students share a name).
    Students not listed here keep showing initials. */
 const STUDENT_DIR="img_kiosk/";
