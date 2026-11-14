@@ -226,7 +226,7 @@ const PIC={
     Arjun Mittal.png, Armaan Meher.png, Aryav Garg.png */
 };
 const sav=m=>{const f=PIC[m[0]+"|"+m[1]]||PIC[m[0]];
- return `<div class="av">${f?`<img src="${STUDENT_DIR}${encodeURIComponent(f)}" alt="${esc(m[0])}" loading="lazy" onerror="this.replaceWith(document.createTextNode('${ini(m[0])}'))">`:ini(m[0])}</div>`};
+ return `<div class="av">${f?`<img src="${STUDENT_DIR}${encodeURIComponent(f)}" alt="${esc(m[0])}" onerror="this.replaceWith(document.createTextNode('${ini(m[0])}'))">`:ini(m[0])}</div>`};
 
 /* Line icons (replace emojis) */
 const ICONS={
@@ -246,7 +246,7 @@ const ic=n=>`<svg class="svg" viewBox="0 0 24 24" fill="none" stroke="currentCol
 /* Images: preloaded + decoded before the UI appears */
 const PHOTO="https://www.mayocollege.com/home/images/pro-";
 const FOUNDER_IMG="https://static.wixstatic.com/media/f778f5_3e5bc8ef3ec7478bb9e3667cfd670712~mv2.png/v1/fill/w_410,h_410,al_c,q_85,usm_0.66_1.00_0.01,enc_avif,quality_auto/image.png";
-const IMGS=[FOUNDER_IMG,...[1,2,3,4,5].map(i=>PHOTO+i+".png")];
+const IMGS=[FOUNDER_IMG,...[1,2,3,4,5].map(i=>PHOTO+i+".png"),...Object.values(PIC).map(f=>STUDENT_DIR+encodeURIComponent(f))];
 const imgOK={},KEEP=[];
 const preload=()=>Promise.all(IMGS.map(u=>new Promise(res=>{
  const im=new Image();KEEP.push(im);
